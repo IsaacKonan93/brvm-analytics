@@ -22,5 +22,4 @@ Thumbs.db
 desktop.ini
 
 # Web app database built by publish_app_data.py
-brvm_app.db
-brvm_app.db.zip
+brvm_app.db*
