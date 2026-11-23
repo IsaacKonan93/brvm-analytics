@@ -41,6 +41,14 @@ def db_state() -> dict:
     return {"bulletins": n, "last": last}
 
 
+def web_data_outdated() -> bool:
+    """True if the web app data was not yet published for the latest bulletin of brvm.db
+    (publish_app_data.py records the published date in logs/web_published.txt after a successful upload)."""
+    marker = LOGS / "web_published.txt"
+    published = marker.read_text().strip() if marker.exists() else ""
+    return published != (db_state()["last"] or "")
+
+
 def run(step: str, args: list[str], log) -> bool:
     """Run one step as a subprocess, streaming its output to the log."""
     log(f"--- {step}: {' '.join(args)}")
@@ -92,6 +100,8 @@ def main(argv: list[str] | None = None) -> int:
         ok &= run("qc report", ["extract_boc.py", "--qc"], log)
         if ok:  # weekly backup of brvm.db (skipped if the newest backup is less than 7 days old)
             ok &= run("backup", ["backup_db.py", "--if-older", "7"], log)
+        if ok and web_data_outdated():  # web app data (skipped if BRVM_GITHUB_TOKEN is not set)
+            ok &= run("publish web data", ["publish_app_data.py"], log)
         if args.notebook and ok:
             ok &= run("notebook", ["-m", "jupyter", "nbconvert", "--to", "notebook", "--execute", "--inplace",
                                    "--ExecutePreprocessor.timeout=900", "brvm_database_showcase.ipynb"], log)

@@ -16,7 +16,8 @@ C:\Users\isaac.konan\Documents\BRVM\daily_update.cmd
 | 2. Extract | `extract_boc.py` | Loads every new or changed PDF into `brvm.db`, then refreshes the derived tables: `securities`, the split adjustments (`corporate_actions`, `equity_quotes_adjusted`…). Nothing is redone for bulletins already extracted. |
 | 3. QC report | `extract_boc.py --qc` | Rewrites [qc_report.md](qc_report.md). |
 | 4. Backup | `backup_db.py --if-older 7` | Once a week, a verified compressed copy of `brvm.db` (see [Backup](#backup)). |
-| 5. *(optional)* Notebook | `--notebook` | Re-runs [brvm_database_showcase.ipynb](brvm_database_showcase.ipynb) so its charts include the new day. |
+| 5. Publish web data | `publish_app_data.py` | When there is a new bulletin, rebuilds the slim database of the web app and uploads it to GitHub, where the online app picks it up (see [WEBAPP.md](WEBAPP.md#daily-data-updates-online)). Skipped until `BRVM_GITHUB_TOKEN` is set. |
+| 6. *(optional)* Notebook | `--notebook` | Re-runs [brvm_database_showcase.ipynb](brvm_database_showcase.ipynb) so its charts include the new day. |
 
 Properties:
 * **Incremental and safe to repeat.** Running it twice, or on a holiday, does nothing harmful. A normal day takes about 10 seconds.

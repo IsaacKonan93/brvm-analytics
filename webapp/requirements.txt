@@ -1,0 +1,6 @@
+# Installed by Streamlit Community Cloud for the web app (webapp/streamlit_app.py)
+streamlit>=1.50
+plotly>=6.0
+pandas>=2.2
+numpy>=2.0
+requests>=2.32

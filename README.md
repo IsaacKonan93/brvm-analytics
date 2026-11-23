@@ -24,6 +24,16 @@ It runs automatically through the Windows scheduled task "BRVM daily update": we
 
 **Split-adjusted prices:** bulletin prices are printed unadjusted. The view `equity_quotes_adjusted` gives prices adjusted for the 50 splits since 2016, with official ratios from BRVM notices where available. Use it for returns and charts (see [EXTRACTION.md](EXTRACTION.md#splits-and-adjusted-prices-corporate_actions-price_anomalies-adjustment_factors-view-equity_quotes_adjusted)). To build an application on the database, see [EXTRACTION.md → Using the database from an application](EXTRACTION.md#using-the-database-from-an-application).
 
+## Web app (Streamlit, French/English)
+
+A website for analysing the data, with five pages: market overview, stock explorer, compare & screen, bonds, mutual funds. It has a French/English switch, interactive charts and CSV exports. See **[WEBAPP.md](WEBAPP.md)**.
+
+```powershell
+.\.env\Scripts\streamlit run webapp/streamlit_app.py     # then open http://localhost:8501
+```
+
+To make it public on Streamlit Community Cloud (free), follow the step-by-step guide in [WEBAPP.md → Put it online](WEBAPP.md#put-it-online-streamlit-community-cloud). Once set up, the daily update also publishes the new data to the site each evening.
+
 ## Using the database: showcase notebook
 
 **[brvm_database_showcase.ipynb](brvm_database_showcase.ipynb)** is a guided tour of `brvm.db`. Each section answers a typical question with one SQL query and one table or chart:
@@ -51,6 +61,9 @@ In VS Code, select the `.env` interpreter as the notebook kernel. The packages i
 
 | File | Purpose |
 |---|---|
+| [WEBAPP.md](WEBAPP.md) | **Web app:** pages, how it works, running locally, putting it online, changing it |
+| [webapp/](webapp/) | The Streamlit app (`streamlit_app.py`, `views/` pages, `app_lib/` data, translations, charts) |
+| [publish_app_data.py](publish_app_data.py) | Builds the slim database for the web app and publishes it to GitHub (daily) |
 | [UPDATE.md](UPDATE.md) | **Daily update:** what it does, scheduling with Windows Task Scheduler, logs, troubleshooting |
 | [backup_db.py](backup_db.py) | Weekly backup of `brvm.db` to `..\BRVM_backups` (verified, zipped, last 4 kept) |
 | [data/corporate_actions_manual.csv](data/corporate_actions_manual.csv) | Manual corrections of split ratios |
