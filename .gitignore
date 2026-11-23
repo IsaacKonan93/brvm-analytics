@@ -1,0 +1,22 @@
+# Python environment and caches
+.env/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Data: re-downloadable / rebuildable (see README.md, EXTRACTION.md)
+boc/
+brvm.db
+brvm.db-*
+exports/
+survey/
+
+# Runtime logs and locks
+logs/
+download_all*.log
+
+# Editor / OS
+.vscode/
+.ipynb_checkpoints/
+Thumbs.db
+desktop.ini
