@@ -1,6 +1,6 @@
 # Extraction quality report
 
-Generated 2026-11-23 11:54 from `brvm.db`.
+Generated 2026-11-23 12:08 from `brvm.db`.
 
 ## Documents
 
@@ -52,8 +52,8 @@ Generated 2026-11-23 11:54 from `brvm.db`.
 | 2 | rights: pNrights: header anchors not found: ['avg_price', 'change_origin_pct'] | 2016-11-02 |
 | 2 | bonds: pNbonds: header anchors not found: ['avg_price'] | 2016-11-02 |
 | 2 | bonds: SUKCI.SN: traded value 'N' unreadable/clipped in the PDF; estimated as volume x price = N | 2021-01-20 |
-| 2 | events: meeting skipped, unreadable company name (font without character map): "(N&, (([ $,N/,N'( &,)" | 2025-12-15 |
 | 2 | events: meeting skipped, unreadable company name (font without character map): "(N&, ([ $,N/,N'( &," | 2025-12-10 |
+| 2 | events: meeting skipped, unreadable company name (font without character map): "(N&, (([ $,N/,N'( &,)" | 2025-12-15 |
 | 2 | bonds: bonds: duplicate row for SUKSN.SN(page N) ignored | 2026-03-13 |
 | 2 | bonds: bonds: duplicate row for SUKTG.SN(page N) ignored | 2026-03-13 |
 | 2 | bonds: bonds: duplicate row for FCAGS.ON(page N) ignored | 2026-05-21 |
@@ -71,13 +71,13 @@ Generated 2026-11-23 11:54 from `brvm.db`.
 | 1 | events: meeting skipped, unreadable company name (font without character map): 'TNT$/ENENGIEN$NETING &I' | 2025-06-10 |
 | 1 | events: meeting skipped, unreadable company name (font without character map): 'TNT$/ENENGIEN$NETING N' | 2025-06-10 |
 | 1 | events: meeting skipped, unreadable company name (font without character map): '%,,& %N' | 2025-06-13 |
+| 1 | events: meeting skipped, unreadable company name (font without character map): 'ENCI (Ex AIR LIQUIDE CI)' | 2025-12-09 |
 | 1 | bonds: bonds: duplicate row for FCAS.ON(page N) ignored | 2026-05-21 |
 | 1 | bonds: bonds: duplicate row for FORBC.ON(page N) ignored | 2026-05-21 |
 | 1 | bonds: bonds: duplicate row for FORBT.ON(page N) ignored | 2026-05-21 |
 | 1 | bonds: bonds: duplicate row for FSNBBF.ON(page N) ignored | 2026-05-21 |
 | 1 | bonds: bonds: duplicate row for FTIMC.ON(page N) ignored | 2026-05-21 |
 | 1 | events: meeting skipped, unreadable company name (font without character map): 'A)RICA G/OBA/ /OGINICNCI' | 2026-09-09 |
-| 1 | bonds: FCAGS.ON: traded value 'N' unreadable/clipped in the PDF; estimated as volume x price = N | 2026-10-02 |
 
 ## Documents not fully extracted
 

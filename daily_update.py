@@ -90,6 +90,8 @@ def main(argv: list[str] | None = None) -> int:
             ok &= run("download", ["download_all.py"], log)
         ok &= run("extract", ["extract_boc.py"], log)
         ok &= run("qc report", ["extract_boc.py", "--qc"], log)
+        if ok:  # weekly backup of brvm.db (skipped if the newest backup is less than 7 days old)
+            ok &= run("backup", ["backup_db.py", "--if-older", "7"], log)
         if args.notebook and ok:
             ok &= run("notebook", ["-m", "jupyter", "nbconvert", "--to", "notebook", "--execute", "--inplace",
                                    "--ExecutePreprocessor.timeout=900", "brvm_database_showcase.ipynb"], log)

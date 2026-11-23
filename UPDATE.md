@@ -8,14 +8,15 @@ C:\Users\isaac.konan\Documents\BRVM\daily_update.cmd
 
 ## What it does
 
-[daily_update.py](daily_update.py), launched by [daily_update.cmd](daily_update.cmd) with the project's `.env` Python, runs three steps:
+[daily_update.py](daily_update.py) runs these steps with the project's `.env` Python. It is launched by the scheduled task (windowless), or by [daily_update.cmd](daily_update.cmd) when you run it by hand.
 
 | Step | Command | What happens |
 |---|---|---|
 | 1. Download | `download_all.py` | Fetches the PDFs of all weekdays not yet in `boc/`. Dates already confirmed as "no bulletin" are skipped, except the last 5 days, which are always re-checked in case a bulletin is published late. |
-| 2. Extract | `extract_boc.py` | Loads every new or changed PDF into `brvm.db`. Nothing is redone for bulletins already extracted. |
+| 2. Extract | `extract_boc.py` | Loads every new or changed PDF into `brvm.db`, then refreshes the derived tables: `securities`, the split adjustments (`corporate_actions`, `equity_quotes_adjusted`…). Nothing is redone for bulletins already extracted. |
 | 3. QC report | `extract_boc.py --qc` | Rewrites [qc_report.md](qc_report.md). |
-| 4. *(optional)* Notebook | `--notebook` | Re-runs [brvm_database_showcase.ipynb](brvm_database_showcase.ipynb) so its charts include the new day. |
+| 4. Backup | `backup_db.py --if-older 7` | Once a week, a verified compressed copy of `brvm.db` (see [Backup](#backup)). |
+| 5. *(optional)* Notebook | `--notebook` | Re-runs [brvm_database_showcase.ipynb](brvm_database_showcase.ipynb) so its charts include the new day. |
 
 Properties:
 * **Incremental and safe to repeat.** Running it twice, or on a holiday, does nothing harmful. A normal day takes about 10 seconds.
@@ -81,6 +82,30 @@ Why 20:00: the bulletin is usually online by about 18:30. If it is late, the nex
 * `logs/daily_update.log`: one `OK` line per weekday, with `last:` equal to the previous trading day or today.
 * [qc_report.md](qc_report.md): new bulletins should be `ok`. A `partial` or `error` bulletin is listed under *Documents not fully extracted*, with the reason.
 * From Python: `SELECT MAX(date) FROM documents` gives the latest bulletin in the database.
+
+## Backup
+
+The daily update runs [backup_db.py](backup_db.py) and makes a backup once a week, when the newest one is more than 7 days old.
+* **Where:** `C:\Users\isaac.konan\Documents\BRVM_backups\`, outside the project folder. This protects against a corrupted database or a mistake, not against losing the PC.
+* **What:** `brvm_YYYY-MM-DD_HHMM.zip`, about 60 MB each, containing `brvm.db` and a `BACKUP_INFO.txt` that gives the last bulletin included.
+* **How:** the copy is taken with SQLite's online backup API, so it is consistent even if the app or the notebook is reading the database. It is then checked (`PRAGMA integrity_check`) before being compressed.
+* **Rotation:** the last 4 backups are kept, about 1 month.
+
+```powershell
+.\.env\Scripts\python.exe backup_db.py            # backup now
+.\.env\Scripts\python.exe backup_db.py --list     # list backups
+.\.env\Scripts\python.exe backup_db.py --dest X:\BRVM --keep 8   # other folder, keep 8
+```
+
+**To restore:**
+1. Make sure no update is running (`logs\daily_update.lock` absent).
+2. Rename the damaged `brvm.db`.
+3. Unzip `brvm.db` from the latest backup into the project folder.
+4. Run `.\daily_update.cmd`. It re-extracts the bulletins published since the backup, so nothing is lost.
+
+If all backups are lost, `brvm.db` can be rebuilt entirely from the PDFs in `boc/` with `python extract_boc.py --reprocess` (about 4 minutes). The PDFs themselves can be downloaded again with `python download_all.py`.
+
+The **code** is versioned with git in the project folder (`git log` shows the history). The data (`boc/`, `brvm.db`) is excluded from git, see [.gitignore](.gitignore).
 
 ## When something goes wrong
 

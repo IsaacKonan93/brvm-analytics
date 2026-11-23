@@ -205,9 +205,20 @@ def _sector_group(group: str | None) -> str | None:
     return SECTOR_EN_FR.get(m[1], m[1]) if m else None
 
 
+# bulletin markers printed next to names: (d) ex-dividend, (V) variation vs reference price,
+# (*) (**) (***) footnotes, (#), (-), (ex- div)
+_MARKER = re.compile(r"\s*\((?:d|v|#|-|\*+|ex-?\s*div\.?)\)?(?=\s|$)", re.IGNORECASE)
+_EX_DIV = re.compile(r"\((?:d|ex-?\s*div\.?)\)", re.IGNORECASE)
+
+
 def _clean_title(t: str) -> str:
     t = t.replace("’", "'").replace("–", "-").replace("''", "'")
-    return re.sub(r"\s*\(\*+\)\s*", " ", t).strip()
+    return re.sub(r"\s+", " ", _MARKER.sub(" ", t)).strip()
+
+
+def _title_flags(t: str) -> str | None:
+    """Flags carried by markers in the name: ex-dividend '(d)'."""
+    return "EX-DIV" if _EX_DIV.search(t) else None
 
 
 def _yield(cells: dict, loc: str) -> float | None:
@@ -293,7 +304,9 @@ def parse_equities(doc: Document, date: dt.date) -> tuple[list[dict], list[dict]
                 "ytd_pct": _num(c, "ytd_pct", loc), "limit_low": _num(c, "limit_low", loc),
                 "limit_high": _num(c, "limit_high", loc), "div_amount": _num(c, "div_amount", loc),
                 "div_date": parse_date(c.get("div_date"), date), "net_yield": _yield(c, loc),
-                "per": _num(c, "per", loc), "status_flag": _flags(c, ("open", "close", "prev_close", "ref_price")),
+                "per": _num(c, "per", loc),
+                "status_flag": ",".join(filter(None, [_flags(c, ("open", "close", "prev_close", "ref_price")),
+                                                      _title_flags(r.title)])) or None,
                 "page": r.page,
             })
             _fix_value(quotes[-1], c.get("value"), ("close", "avg_price", "ref_price", "prev_close"), warns)

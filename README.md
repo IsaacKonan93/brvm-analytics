@@ -14,13 +14,15 @@ Example source page: <https://www.brvm.org/fr/bulletin-officiel-de-la-cote-du-30
 
 ## Daily update
 
-One command downloads the new bulletins, loads them into `brvm.db` and refreshes the QC report. It takes about 10 seconds a day and catches up automatically after missed days:
+One command downloads the new bulletins, loads them into `brvm.db`, refreshes the QC report and makes a weekly backup. It takes about 10 seconds a day and catches up automatically after missed days:
 
 ```powershell
 .\daily_update.cmd            # or: .\.env\Scripts\python.exe daily_update.py [--notebook]
 ```
 
-To run it automatically every weekday at 20:00 GMT (Windows Task Scheduler), and for logs and troubleshooting, see **[UPDATE.md](UPDATE.md)**.
+It runs automatically through the Windows scheduled task "BRVM daily update": weekdays at 20:00 and 09:00, and at logon. See **[UPDATE.md](UPDATE.md)** for logs, backup and restore, and troubleshooting.
+
+**Split-adjusted prices:** bulletin prices are printed unadjusted. The view `equity_quotes_adjusted` gives prices adjusted for the 50 splits since 2016, with official ratios from BRVM notices where available. Use it for returns and charts (see [EXTRACTION.md](EXTRACTION.md#splits-and-adjusted-prices-corporate_actions-price_anomalies-adjustment_factors-view-equity_quotes_adjusted)). To build an application on the database, see [EXTRACTION.md → Using the database from an application](EXTRACTION.md#using-the-database-from-an-application).
 
 ## Using the database: showcase notebook
 
@@ -50,6 +52,9 @@ In VS Code, select the `.env` interpreter as the notebook kernel. The packages i
 | File | Purpose |
 |---|---|
 | [UPDATE.md](UPDATE.md) | **Daily update:** what it does, scheduling with Windows Task Scheduler, logs, troubleshooting |
+| [backup_db.py](backup_db.py) | Weekly backup of `brvm.db` to `..\BRVM_backups` (verified, zipped, last 4 kept) |
+| [data/corporate_actions_manual.csv](data/corporate_actions_manual.csv) | Manual corrections of split ratios |
+| [.gitignore](.gitignore) | The code is versioned with git; data, venv and logs are excluded |
 | [daily_update.py](daily_update.py), [daily_update.cmd](daily_update.cmd) | Daily update: download → extract → QC report (→ notebook), with lock and logs in `logs/` |
 | [brvm_database_showcase.ipynb](brvm_database_showcase.ipynb) | **Showcase notebook:** how to query and chart the database (see above) |
 | `exports/` | CSV files written by the notebook (e.g. `equity_prices_adjusted.csv`, split-adjusted prices: sessions × stocks) |

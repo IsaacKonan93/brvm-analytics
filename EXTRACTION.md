@@ -20,7 +20,8 @@ The extraction is Python code that reads every downloaded BOC PDF (`boc/boc_YYYY
 7. [Quality control](#quality-control)
 8. [Known limitations](#known-limitations)
 9. [Example queries](#example-queries)
-10. [Maintenance: when BRVM changes its layout](#maintenance-when-brvm-changes-its-layout)
+10. [Using the database from an application](#using-the-database-from-an-application)
+11. [Maintenance: when BRVM changes its layout](#maintenance-when-brvm-changes-its-layout)
 
 ## Quick start
 
@@ -81,6 +82,8 @@ The "plus fortes hausses / baisses" (top movers) block is **not** stored, becaus
 | [brvm_extract/parsers/events.py](brvm_extract/parsers/events.py) | Notices and shareholder meetings |
 | [brvm_extract/pipeline.py](brvm_extract/pipeline.py) | Runs all sections on one PDF, reconstructs clipped values, runs the checksums |
 | [brvm_extract/db.py](brvm_extract/db.py) | SQLite schema, writes, `securities` rebuild |
+| [brvm_extract/adjustments.py](brvm_extract/adjustments.py) | Splits and adjusted prices: `corporate_actions`, `price_anomalies`, `adjustment_factors`, view `equity_quotes_adjusted` |
+| [data/corporate_actions_manual.csv](data/corporate_actions_manual.csv) | Manual corrections of split ratios (tracked in git) |
 | [brvm_extract/qc.py](brvm_extract/qc.py) | Quality report `qc_report.md` |
 | [tests/](tests/) | `test_values.py` (parsing rules) and `test_golden.py` (real values from one bulletin per era) |
 
@@ -132,7 +135,7 @@ All dates are ISO text (`YYYY-MM-DD`). Prices and amounts are in FCFA, and perce
 
 | Column | Meaning |
 |---|---|
-| `name` | Company name as printed (wrapped lines joined) |
+| `name` | Company name as printed (wrapped lines joined, bulletin markers such as `(d)`, `(V)`, `(*)` removed) |
 | `group_label` | Group heading the row sits under (raw), e.g. `COMPARTIMENT PRESTIGE`, `SECTEUR - FINANCES` |
 | `sector_code` | 2023+ sector code (`TEL`, `FIN`, `SPU`, `AGR`…) |
 | `sector` | Sector from the group heading (2016–2022) |
@@ -148,8 +151,42 @@ All dates are ISO text (`YYYY-MM-DD`). Prices and amounts are in FCFA, and perce
 | `div_amount`, `div_date` | Last net dividend paid and its payment date |
 | `net_yield` | Net yield % (dividend / price) |
 | `per` | Price/earnings ratio |
-| `status_flag` | Comma list: `NC` (not traded), `SP` (suspended), `VALUE-EST` / `VALUE-REC` (see below) |
+| `status_flag` | Comma list: `NC` (not traded), `SP` (suspended), `EX-DIV` (ex-dividend session, `(d)` next to the name in the bulletin), `VALUE-EST` / `VALUE-REC` (see below) |
 | `page` | Page of the PDF |
+
+### Splits and adjusted prices: `corporate_actions`, `price_anomalies`, `adjustment_factors`, view `equity_quotes_adjusted`
+
+Bulletin prices are printed as traded, never adjusted. After each extraction, `brvm_extract/adjustments.py` derives the split adjustments from `equity_quotes`:
+
+* **`corporate_actions`** — PK (symbol, date): one row per split or reverse split. `date` is the first session at the new price.
+
+  | Column | Meaning |
+  |---|---|
+  | `kind` | `split` or `reverse_split` |
+  | `ratio`, `label` | New price / old price (`0.1` for a 1:10 split; `2.0` for a 2:1 reverse split), and the label `1:10` / `2:1` |
+  | `prev_ref`, `ref_price`, `observed_ratio` | Reference prices around the jump, and their ratio. The observed ratio includes the day's price move |
+  | `source` | `notice`: the ratio comes from a BRVM split notice in the bulletins (*"Fractionnement des actions à raison de dix (10) actions nouvelles pour une (1) action ancienne"*), quoted in `evidence`. `detected`: the observed ratio rounded to a standard ratio (1:2, 1:4, 1:5, 1:10, 1:20, 1:25, 1:40, 1:50, 1:100…) when within 8 %. `manual`: from the overrides file |
+
+* **Detection.** BRVM limits daily moves to ±7.5 %, so a `ref_price` jump outside ×0.6–×1.6 from one session to the next is a corporate action. Machine-readable notices exist from December 2017; earlier splits (the 2016–2017 wave) are `detected`. On 2026-11-23 there were 50 actions: 14 confirmed by a notice, 36 detected.
+* **`price_anomalies`** — PK (symbol, date): a jump that comes back within 10 sessions is a misprint, not a split (e.g. STBC 2018-07-12, and SAFC in December 2018). Those sessions are listed here, with the reason.
+* **`adjustment_factors`** — (symbol, start_date, end_date, factor): prices of `[start_date, end_date)` are multiplied by `factor`, the product of the ratios of all later splits.
+* **View `equity_quotes_adjusted`**: every `equity_quotes` row, plus:
+
+  | Column | Meaning |
+  |---|---|
+  | `adj_factor` | The factor applied to that session |
+  | `adj_prev_close`, `adj_open`, `adj_close`, `adj_ref_price`, `adj_avg_price` | Prices × factor. They are NULL on misprinted sessions (`price_anomaly = 1`) |
+  | `adj_volume` | Volume ÷ factor |
+  | `adj_div_amount` | The dividend adjusted with the factor of its **payment** date |
+  | other columns | The printed values, for reference |
+
+  **Use this view for any return, performance or chart over time.** `value` (FCFA traded) needs no adjustment.
+* **Overrides:** add a line to [data/corporate_actions_manual.csv](data/corporate_actions_manual.csv) and run `python extract_boc.py` (it refreshes the adjustments even when there is no new PDF). Columns: `symbol,date,action,ratio,note`, where `action` is `set` (force this ratio) or `ignore` (not a split). For example:
+
+  ```csv
+  symbol,date,action,ratio,note
+  SAFC,2017-10-17,set,0.5,1:2 split according to the 2017 annual report
+  ```
 
 ### `bond_quotes` — PK (date, symbol)
 
@@ -271,15 +308,16 @@ For each bulletin (`pipeline.qc_checks`):
   * status per era and rows per table and year;
   * checksum results and warning patterns;
   * bulletins not fully extracted, and coverage gaps.
-* **Tests** (`python -m pytest tests`, 11 tests):
+* **Tests** (`python -m pytest tests`, 16 tests):
   * parsing rules for French/English numbers, dates and flags;
   * golden values from 2017-01-02 (era A), 2019-06-14 (B), 2023-04-03 (C), 2025-01-02 (English edition) and 2025-10-30 (D);
   * the bilingual file of 2017-12-20;
-  * the rotated and 10×-scaled fund pages.
+  * the rotated and 10×-scaled fund pages;
+  * split detection, misprint handling, notice matching and the adjusted view (`test_adjustments.py`).
 
 ## Known limitations
 
-* **Prices are not adjusted** for splits and reverse splits (there was a wave of splits in 2016–2018, and SONATEL split 1:10 on 2026-10-23). The notebook [brvm_database_showcase.ipynb](brvm_database_showcase.ipynb) (section 4) shows how to detect them and adjust: a jump of more than ±40 % in `ref_price` from one session to the next is impossible under BRVM's ±7.5 % daily limit. Around a split the bulletin can be inconsistent for a few days (e.g. `prev_close` still at the old price), so use `ref_price`.
+* **Split ratios before December 2017 are inferred** from the prices (`source = 'detected'`), because there are no machine-readable notices for that period. Three of them are not standard ratios and deserve a check: SAFC 2017-10-17 (observed 1:2.33, kept as observed), NTLC 2017-09-11 and CIEC 2017-10-19 (rounded to 1:17). Correct them in `data/corporate_actions_manual.csv` if you find the official ratio. Bonus-share issues and other capital operations that do not move the price by more than 40 % are not detected.
 * **Typos in the bulletins are kept as printed.** For example, the bond capitalisation of 2024-11-11 (`10,503,545,90,495`) and 2025-01-16 (billions instead of trillions), or a few misprinted fund NAVs. Filter outliers in analyses (`drop_spikes()` in the notebook).
 * **Funds:** the fund page exists from October 2016. 78 bulletins have no fund data (mostly before October 2016).
 * **Notices:** in era A they are free text ("Informations : opérations en cours"). Only the tables from 2017-12 onwards are extracted.
@@ -292,8 +330,11 @@ For each bulletin (`pipeline.qc_checks`):
 ## Example queries
 
 ```sql
--- SONATEL daily close and volume
-SELECT date, close, ref_price, volume, value FROM equity_quotes WHERE symbol = 'SNTS' ORDER BY date;
+-- SONATEL daily price, split-adjusted (use this for returns and charts)
+SELECT date, adj_ref_price, adj_close, adj_volume, value FROM equity_quotes_adjusted WHERE symbol = 'SNTS' ORDER BY date;
+
+-- All splits, with the official notice when there is one
+SELECT date, symbol, label, source, evidence FROM corporate_actions ORDER BY date;
 
 -- Last price of every stock (close if traded, else reference price)
 SELECT q.symbol, s.name, q.date, COALESCE(q.close, q.ref_price) AS price, q.per, q.net_yield
@@ -326,9 +367,29 @@ From Python / pandas:
 ```python
 import sqlite3, pandas as pd
 con = sqlite3.connect("brvm.db")
-px = pd.read_sql("SELECT date, symbol, close, ref_price FROM equity_quotes", con, parse_dates=["date"])
-prices = px.pivot(index="date", columns="symbol", values="ref_price")
+px = pd.read_sql("SELECT date, symbol, adj_ref_price FROM equity_quotes_adjusted", con, parse_dates=["date"])
+prices = px.pivot(index="date", columns="symbol", values="adj_ref_price")   # split-adjusted
 ```
+
+## Using the database from an application
+
+`brvm.db` is a plain SQLite file, so any language can read it: Python (`sqlite3`, pandas, SQLAlchemy), R, Excel or Power BI through an ODBC driver, or a web backend.
+
+* **Open it read-only** from the app, so a bug can never modify the data. The daily update is the only writer.
+
+  ```python
+  con = sqlite3.connect("file:C:/Users/isaac.konan/Documents/BRVM/brvm.db?mode=ro", uri=True)
+  ```
+* **Reading while it updates is safe.** The database runs in WAL mode: readers keep seeing a consistent state while the daily update writes, and see the new day once it commits. The update takes a few seconds, at 09:00, at 20:00 and at logon (see [UPDATE.md](UPDATE.md)).
+* **Build on the documented tables and views.** These are the stable interface:
+  * `equity_quotes_adjusted` for stock prices;
+  * `bond_quotes`, `index_values`, `market_stats`, `fund_navs`, `securities`;
+  * `corporate_actions`, `general_meetings`, `corporate_notices`.
+
+  `documents`, `extraction_log` and `table_totals` are technical. If a column changes, the parser version changes and this file is updated.
+* **Latest session:** `SELECT MAX(date) FROM documents WHERE status = 'ok'`. Use it to show the "as of" date.
+* **Indexes:** queries by `(symbol, date)` on the quote tables and by `(fund_name, date)` are indexed. Filter on these columns for fast queries.
+* **Caching:** data changes at most a few times a day, so an app can cache query results and refresh them when `MAX(date)` changes.
 
 ## Maintenance: when BRVM changes its layout
 
