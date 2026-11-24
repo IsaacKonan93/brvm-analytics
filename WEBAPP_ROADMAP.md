@@ -43,6 +43,7 @@ For each page, the user reviews it in the browser and says what to keep, change,
 | Compare & screen | Rebuilt on 2026-11-24 (step 5): tabs Compare, Performance, Screener, Simulator. **Waiting for the user's review.** |
 | Bonds | Not reviewed |
 | Mutual funds | Not reviewed |
+| Market structure | **New**, built on 2026-11-24 (step 6); waiting for the user's review |
 | Official bulletins (BOC) | **New**, built on 2026-11-24 (step 1); waiting for the user's review |
 
 * **2026-11-23:** the review was paused while the user thought about the app as a whole.
@@ -53,6 +54,7 @@ For each page, the user reviews it in the browser and says what to keep, change,
 * **2026-11-24:** step 3, total return, is built and tested. It is waiting for the user's review in the browser.
 * **2026-11-24:** step 4, the stronger stock page, is built and tested. It is waiting for the user's review in the browser.
 * **2026-11-24:** step 5, the performance table and investment simulator, is built and tested. It is waiting for the user's review in the browser.
+* **2026-11-24:** step 6, market structure, is built and tested. It is waiting for the user's review in the browser.
 * **Deployment online is on hold** until the user says the rebuild is finished. Until then, nothing is pushed to GitHub or published. The deployment steps stay in [WEBAPP.md → Put it online](WEBAPP.md#put-it-online-streamlit-community-cloud).
 
 ## Decisions
@@ -107,7 +109,7 @@ Technical notes, checked on 2026-11-24:
 | **Valuation over time** | P/E and net yield since 2016 against the median of the stock's current sector and of the market. Stock page, *Valuation* tab. | built, to review |
 | **Performance table** | Every stock over 1W / 1M / YTD / 1Y / 3Y / 5Y, plus 3Y and 5Y per year, with a ranking chart; filters on sector and country. The screener gets the 1-year return. *Compare & screen*, *Performance* tab. | built, to review |
 | **Investment simulator** | An amount in one stock from a chosen date. Its value today with dividends reinvested, taken in cash, on price only, and in the BRVM Composite. *Compare & screen*, *Simulator* tab. | built, to review |
-| **Market structure** | Capitalisation by country and sector. Share of the 5 largest companies (SONATEL alone weighs a lot). Treemap of the market coloured by the day's change. | decided |
+| **Market structure** | Capitalisation by country and sector. Share of the 5 largest companies (SONATEL alone weighs a lot). Treemap of the market coloured by the day's change. Built as a new page, *Market structure*. The share counts come from a daily snapshot of brvm.org's *Capitalisations* page, because the bulletins only give the market total. See [WEBAPP.md → Market structure rules](WEBAPP.md#market-structure-rules). | built, to review |
 | **Bonds** | Upcoming coupon and redemption dates; amounts outstanding by issuer. | proposed (after v1) |
 | **Funds** | The NAV ranking. | done (v1) |
 

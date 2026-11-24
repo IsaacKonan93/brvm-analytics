@@ -314,6 +314,9 @@ Some 2025 bulletins embed a font without a usable character map, so the text com
 * `bulletins`: one row per weekday since 2016-08-01, rebuilt after each run from `boc/manifest.csv` (written by `download_all.py`).
   * `status`: `published`, `none` (holiday or no session) or `unavailable` (the bulletin exists but its link on brvm.org is broken: 2018-12-06 and 2018-12-07);
   * `url`: the address of the PDF on brvm.org. It is stored, not computed, because it cannot be guessed from the date (suffixes, typos: see [SITE_NOTES.md](SITE_NOTES.md#pdf-filenames)). The web app links to it.
+* `shares_outstanding`: number of shares of every listed stock, one snapshot per day since 2026-11-24, from brvm.org's *Capitalisations* page (not in the bulletins). It is rebuilt after each run from `boc/shares_outstanding.csv`, which [fetch_shares.py](fetch_shares.py) writes.
+  * columns: `date` (day of the download), `symbol`, `name`, `shares`, `price` (latest session on brvm.org), `float_cap`, `global_cap` (= shares × price, checked at download);
+  * the free-float figures of the page look doubtful (SONATEL 2.2 %), so the app does not show them.
 * `extraction_log`: every warning and check result per bulletin, with `section` and `level` (`info` / `warning` / `error`).
 * `table_totals`: TOTAL lines printed in the BOC.
   * `level`: `group` (e.g. COMPARTIMENT PRINCIPAL), `category` (e.g. TOTAL - OBLIGATIONS CLASSIQUES) or `grand` (TOTAL - Marché des actions/obligations);

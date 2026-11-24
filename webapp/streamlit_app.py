@@ -15,7 +15,7 @@ import streamlit as st  # noqa: E402
 
 from app_lib import data  # noqa: E402
 from app_lib.i18n import LANGS, fmt_date, t  # noqa: E402
-from views import bonds, bulletins, compare, funds, overview, stock  # noqa: E402
+from views import bonds, bulletins, compare, funds, overview, stock, structure  # noqa: E402
 from views.common import boc_md  # noqa: E402
 
 st.set_page_config(page_title="BRVM", page_icon=":material/monitoring:", layout="wide")
@@ -38,6 +38,7 @@ st.query_params["basis"] = st.session_state.basis
 
 pages = [
     st.Page(overview.render, title=t("page_overview"), icon=":material/monitoring:", url_path="overview", default=True),
+    st.Page(structure.render, title=t("page_structure"), icon=":material/grid_view:", url_path="structure"),
     st.Page(stock.render, title=t("page_stock"), icon=":material/query_stats:", url_path="stock"),
     st.Page(compare.render, title=t("page_compare"), icon=":material/compare_arrows:", url_path="compare"),
     st.Page(bonds.render, title=t("page_bonds"), icon=":material/account_balance:", url_path="bonds"),

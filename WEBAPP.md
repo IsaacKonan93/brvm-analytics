@@ -13,11 +13,12 @@ A public website for analysing the BRVM data in `brvm.db`. It is built with [Str
 3. [How it works](#how-it-works)
 4. [Daily briefing rules](#daily-briefing-rules)
 5. [Stock page rules](#stock-page-rules)
-6. [Compare & screen rules](#compare--screen-rules)
-7. [Put it online (Streamlit Community Cloud)](#put-it-online-streamlit-community-cloud)
-8. [Daily data updates online](#daily-data-updates-online)
-9. [Changing the app](#changing-the-app)
-10. [Tests](#tests)
+6. [Market structure rules](#market-structure-rules)
+7. [Compare & screen rules](#compare--screen-rules)
+8. [Put it online (Streamlit Community Cloud)](#put-it-online-streamlit-community-cloud)
+9. [Daily data updates online](#daily-data-updates-online)
+10. [Changing the app](#changing-the-app)
+11. [Tests](#tests)
 
 ## Run it locally
 
@@ -48,6 +49,7 @@ Wherever a session date is shown, a **📄 BOC** link opens that day's official 
 | Page | What it shows |
 |---|---|
 | **Market overview** | Session picker (default: last session). **Daily briefing:** a written summary of the session in French or English; *Highlights* (52-week highs and lows, moves close to the ±7.5 % limit, unusual trading, splits, new notices); *Upcoming* (general meetings, dividend payments, splits and first listings announced in the bulletins), each with the 📄 bulletin announcing it. Rules: [Daily briefing rules](#daily-briefing-rules). Headline indices (BRVM Composite, BRVM 30, BRVM Prestige; BRVM 10 before 2023) with day and year-to-date change. Equity and bond market cap, value traded, rising / falling / unchanged. Composite history with range buttons (1M → All). Top gainers and losers. Most traded stocks. Sector indices since 1 January. Market cap of equities vs bonds over time. Value traded per month with its 12-month average. |
+| **Market structure** | Session picker (since 2019). Equity market cap, listed companies, weight of the largest company and of the top 5. **Treemap** of the market: one rectangle per stock, area = capitalisation, colour = day change (blue up, red down, grey unchanged), grouped by sector or country. Capitalisation by sector and by country (% of the market). Concentration since 2019: month-end weight of the largest stock and of the top 5. Table of every stock: rank, capitalisation, weight, number of shares, price, change; CSV export. Rules: [Market structure rules](#market-structure-rules). |
 | **Stock explorer** | Stock picker; `?symbol=SNTS` in the URL opens that stock directly. Caption: country, sector, compartment, last session with its 📄 BOC. KPIs: last adjusted price and day change, YTD and 1-year return (dividends reinvested by default), P/E, net yield, last dividend. Price chart with a volume panel below; with dividends reinvested it shows the price with dividends reinvested next to the split-adjusted price. Four tabs: **Dividends**: a dividend announced and not yet paid; trailing 12-month yield, 5-year growth of the yearly dividend, years with a dividend; dividend per payment year; every dividend with its ex-date (📄 BOC), payment date, amount as printed, adjusted amount and yield at the ex-date. **Liquidity**, over 3 months, 1 year or 3 years: average value and volume per session, share of sessions with trades, liquidity rank among the listed stocks; value traded per month; order book at the close and the bid-ask spread over the last 90 sessions. **Valuation**: P/E and net yield since 2016 against the median of the stock's sector and of the market. **Events**: splits, notices, shareholder meetings. Rules: [Stock page rules](#stock-page-rules). |
 | **Compare & screen** | Four tabs, all following the Performance switch. *Compare:* up to 8 stocks over YTD / 1Y / 3Y / 5Y / All, rebased to 100; return, annualised volatility and maximum drawdown; correlation heatmap of daily returns. *Performance:* every listed stock over 1 week, 1 month, YTD, 1, 3 and 5 years (plus 3 and 5 years per year), with filters on sector and country and a bar chart ranking the stocks over the chosen horizon; sortable, CSV export. *Screener:* every listed stock on the last session, with filters on sector, country, compartment, P/E range, minimum yield and minimum average daily value traded over 3 months, and its 1-year return; sortable, CSV export. *Simulator:* an amount invested in one stock on a chosen date, and its value today with dividends reinvested, with dividends taken in cash, on price only, and in the BRVM Composite; chart and table with gain and gain per year. Rules: [Compare & screen rules](#compare--screen-rules). |
 | **Bonds** | Every listed bond on the last session, with filters on issuer, category and maturity: coupon, maturity, nominal, price, accrued coupon, next coupon, amortisation. Coupon vs maturity chart, colored by issuer when 3 or fewer issuers are selected. History of one bond (price, accrued coupon). Value traded per year, equities vs bonds. |
@@ -68,7 +70,7 @@ brvm.db (this PC, updated by daily_update.py)
 | File | Role |
 |---|---|
 | [webapp/streamlit_app.py](webapp/streamlit_app.py) | Entry point: language switch, navigation, "data as of" date, footer |
-| [webapp/views/](webapp/views/) | One module per page (`overview.py`, `stock.py`, `compare.py`, `bonds.py`, `funds.py`, `bulletins.py`), each with a `render()` function. `common.py` has the table, CSV and chart helpers |
+| [webapp/views/](webapp/views/) | One module per page (`overview.py`, `structure.py`, `stock.py`, `compare.py`, `bonds.py`, `funds.py`, `bulletins.py`), each with a `render()` function. `common.py` has the table, CSV and chart helpers |
 | [webapp/app_lib/data.py](webapp/app_lib/data.py) | Every database query. The database is opened **read-only**. Queries are cached and keyed on the latest bulletin date, so a new bulletin refreshes everything |
 | [webapp/app_lib/briefing.py](webapp/app_lib/briefing.py) | The daily briefing: notable events of a session, upcoming events read from the notices, the written summary (text templates, no AI) |
 | [webapp/app_lib/i18n.py](webapp/app_lib/i18n.py) | French/English labels (`LABELS`), sector / country / fund-category names, number formats (FR `1 234,56`, EN `1,234.56`; amounts `13 277 Mds` / `13.28 tn`) |
@@ -76,6 +78,7 @@ brvm.db (this PC, updated by daily_update.py)
 | [.streamlit/config.toml](.streamlit/config.toml) | Theme. Primary color `#2a78d6`; light/dark follows the visitor's setting. The navigation bar (sidebar) is **Indigo dye `#00416A`** with white text in both modes, a lighter indigo `#0A5A8C` for widgets and the selected page, and light-blue accents and links (`#8CC8F2`, `#A9D8FF`) |
 | [webapp/requirements.txt](webapp/requirements.txt) | Packages installed by Streamlit Cloud |
 | [publish_app_data.py](publish_app_data.py) | Builds and uploads the slim database |
+| [fetch_shares.py](fetch_shares.py) | Daily snapshot of the number of shares of every stock from brvm.org (market structure) |
 
 **Which database the app uses,** in this order:
 1. `BRVM_DB`: a path, from an environment variable or Streamlit secret;
@@ -122,6 +125,16 @@ The functions are in [webapp/app_lib/data.py](webapp/app_lib/data.py): `dividend
 | Liquidity | Over the chosen period. Every session counts, including those without trades (value 0). Rank by average value traded among the stocks quoted on the last session. |
 | Spread | (best ask − best bid) / mid price at the close, over the last 90 sessions with both a bid and an ask. The slim online database keeps 90 sessions of order book, so this works online too. |
 | Valuation | P/E and net yield as printed by BRVM. P/E below 0 or above 100 and yields above 30 % are left out. The sector is the stock's **current** sector over the whole history: BRVM's sector codes only exist since 2023 and changed in 2025. The medians include the stock itself. |
+
+## Market structure rules
+
+| Item | Rule |
+|---|---|
+| Capitalisation of a stock | Number of shares × split-adjusted reference price of the session (`market_structure` in [webapp/app_lib/data.py](webapp/app_lib/data.py)). The bulletins only give the market total, so the number of shares comes from brvm.org's *Capitalisations* page, through a daily snapshot ([fetch_shares.py](fetch_shares.py)). On 2026-11-23 the stocks add up to exactly BRVM's published total (18,688 bn FCFA). |
+| Older sessions | The latest share counts are used, with prices adjusted to today's share basis. This assumes no new shares were issued since. From 2019 the rebuilt month-end total stays within −0.7 % to +3.6 % of BRVM's figure. Before 2019 the gap reaches 12 %, because shares were issued since, so the page starts in 2019. As snapshots accumulate, future share issues will be recorded. |
+| Treemap | Area = capitalisation. Colour = day change on the diverging scale red ← grey (0) → blue, clipped at ±7.5 % (the daily limit). A sector or country rectangle is coloured by the capitalisation-weighted change of its stocks. |
+| Concentration | Month-end weight of the largest stock and of the 5 largest, in % of the rebuilt total. |
+| Free float | brvm.org also gives a free-float capitalisation, but its values look doubtful (SONATEL 2.2 %), so the app does not show it. |
 
 ## Compare & screen rules
 

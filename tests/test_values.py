@@ -35,3 +35,19 @@ def test_dates():
     assert parse_date("11-oct", dt.date(2017, 1, 2)) == "2017-10-11"      # no year: next occurrence
     assert parse_date("06-mars", dt.date(2017, 6, 1)) == "2018-03-06"
     assert parse_date("28 mars/ 28 sep.") is None                          # coupon period, not a date
+
+
+def test_fetch_shares_parse():
+    import fetch_shares
+    html = """<table><tr><th>Code obligation</th><th>Nom</th><th>Nombre de titres</th><th>Cours du jour</th>
+      <th>Capitalisation flottante</th><th>Capitalisation globale</th><th>Capitalisation globale (%)</th></tr>
+      <tr><td>SNTS</td><td>SONATEL  SENEGAL</td><td>1 000 000 000</td><td>3 900</td><td>85 800 000 000</td>
+          <td>3 900 000 000 000</td><td>20,87</td></tr></table>"""
+    rows = fetch_shares.parse(html)
+    assert rows == [{"symbol": "SNTS", "name": "SONATEL SENEGAL", "shares": 1e9, "price": 3900.0,
+                     "float_cap": 85.8e9, "global_cap": 3.9e12}]
+    try:
+        fetch_shares.check(rows)          # one stock only: rejected as an incomplete page
+        raise AssertionError("an incomplete page must be rejected")
+    except ValueError:
+        pass

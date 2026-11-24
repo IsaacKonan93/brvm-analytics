@@ -85,6 +85,35 @@ def price_volume(prices: dict[str, pd.Series] | pd.Series, volume: pd.Series, pr
     return fig
 
 
+def treemap(df: pd.DataFrame, group: str, label: str, value: str, color: str, hover: list[str],
+            title: str | None = None, height: int = 560, limit: float = 7.5) -> go.Figure:
+    """Treemap: rectangles sized by `value`, grouped by `group`, colored by `color` on the diverging
+    scale NEG <- MID (0) -> POS, clipped at +/- `limit`. Groups are colored by their value-weighted mean.
+    `hover`: pre-formatted strings per row (customdata), shown in the tooltip."""
+    leaves = df.dropna(subset=[value])
+    groups = leaves.groupby(group)
+    g_val = groups[value].sum()
+    g_col = groups.apply(lambda x: (x[color].fillna(0) * x[value]).sum() / x[value].sum(), include_groups=False)
+    ids = [f"g/{g}" for g in g_val.index] + [f"s/{i}" for i in leaves.index]
+    fig = go.Figure(go.Treemap(
+        ids=ids,
+        labels=list(g_val.index) + list(leaves[label]),
+        parents=[""] * len(g_val) + [f"g/{g}" for g in leaves[group]],
+        values=list(g_val.values) + list(leaves[value]),
+        branchvalues="total",
+        marker=dict(colors=list(g_col.values) + list(leaves[color].fillna(0).clip(-limit, limit)),
+                    colorscale=[[0, NEG], [0.5, MID], [1, POS]], cmin=-limit, cmid=0, cmax=limit,
+                    line=dict(width=2, color="rgba(0,0,0,0)"), showscale=False),
+        customdata=[[g] for g in g_val.index] + [[h] for h in hover],
+        hovertemplate="%{customdata[0]}<extra></extra>",
+        texttemplate="%{label}", textposition="middle center", tiling=dict(pad=2),
+        pathbar=dict(visible=False),
+    ))
+    _layout(fig, title, height, legend=False)
+    fig.update_layout(margin=dict(l=4, r=4, t=50 if title else 8, b=4))
+    return fig
+
+
 def hbars(labels, values, title: str | None = None, diverging: bool = False, text=None,
           height: int | None = None, color: str = SERIES[0]) -> go.Figure:
     colors = [POS if v >= 0 else NEG for v in values] if diverging else color

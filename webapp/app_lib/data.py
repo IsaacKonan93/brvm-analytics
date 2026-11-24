@@ -427,6 +427,62 @@ def valuation_history(v: str, symbol: str) -> tuple[pd.DataFrame, str | None, in
     return out, sector, int(peers["symbol"].nunique())
 
 
+# ---------------------------------------------------------------- market structure (WEBAPP_ROADMAP.md, step 6)
+
+STRUCTURE_SINCE = "2019-01-01"  # before 2019 today's share counts rebuild BRVM's total less well (shares issued since)
+
+
+@st.cache_data(show_spinner=False)
+def shares_latest(v: str) -> pd.DataFrame:
+    """Latest brvm.org snapshot of each stock (table shares_outstanding, fetch_shares.py): number of shares and
+    free-float ratio (free-float / total capitalisation; a free float of 0 on the page is unknown)."""
+    try:
+        df = query("""SELECT s.symbol, s.date, s.shares, s.float_cap, s.global_cap FROM shares_outstanding s
+                      JOIN (SELECT symbol, MAX(date) AS d FROM shares_outstanding GROUP BY symbol) l
+                        ON l.symbol = s.symbol AND l.d = s.date""")
+    except Exception:  # database built before the table existed
+        return pd.DataFrame(columns=["symbol", "date", "shares", "float_ratio"])
+    df["float_ratio"] = (df["float_cap"] / df["global_cap"]).where(df["float_cap"] > 0)
+    return df[["symbol", "date", "shares", "float_ratio"]]
+
+
+@st.cache_data(show_spinner=False)
+def market_structure(v: str, day: str) -> pd.DataFrame:
+    """Every stock quoted on `day` with its capitalisation = shares (latest snapshot) x split-adjusted
+    reference price, its weight in the market (%), free-float capitalisation, sector and country.
+    Exact for the snapshot's session; for earlier sessions it assumes no shares were issued since."""
+    q = query("""SELECT q.symbol, q.name, q.adj_ref_price, q.change_pct, s.sector, s.country
+                 FROM equity_quotes_adjusted q LEFT JOIN securities s USING (symbol) WHERE q.date = ?""", (day,))
+    df = q.merge(shares_latest(v), on="symbol", how="inner")
+    df["cap"] = df["shares"] * df["adj_ref_price"]
+    df = df.dropna(subset=["cap"])
+    df["weight"] = df["cap"] / df["cap"].sum() * 100
+    df["float_cap"] = df["cap"] * df["float_ratio"]
+    return df.sort_values("cap", ascending=False).reset_index(drop=True)
+
+
+@st.cache_data(show_spinner=False)
+def concentration_history(v: str) -> pd.DataFrame:
+    """Month-end weight (%) of the largest stock and of the 5 largest, since STRUCTURE_SINCE, plus the gap
+    between the rebuilt total and BRVM's published equity market cap (%)."""
+    sh = shares_latest(v).set_index("symbol")["shares"]
+    if sh.empty:
+        return pd.DataFrame()
+    px = query("SELECT date, symbol, adj_ref_price FROM equity_quotes_adjusted WHERE date >= ?", (STRUCTURE_SINCE,))
+    px = px.pivot(index="date", columns="symbol", values="adj_ref_price").ffill()
+    listed = query("SELECT date, symbol FROM equity_quotes WHERE date >= ?", (STRUCTURE_SINCE,))
+    listed = listed.assign(on=1).pivot(index="date", columns="symbol", values="on").reindex_like(px)
+    caps = (px * listed)[[c for c in px.columns if c in sh.index]] * sh
+    month_end = caps.groupby(caps.index.to_period("M")).tail(1)
+    total = month_end.sum(axis=1)
+    top = month_end.apply(lambda r: r.dropna().sort_values(ascending=False).values, axis=1)
+    out = pd.DataFrame({"top1": [x[:1].sum() for x in top], "top5": [x[:5].sum() for x in top]}, index=month_end.index)
+    out = out.div(total, axis=0) * 100
+    brvm = stats_history(v, ("equity_market_cap",))["equity_market_cap"]
+    out["gap_pct"] = (total / brvm.reindex(total.index) - 1) * 100
+    return out
+
+
 def _matching_companies(companies: list[str], symbol: str, name: str) -> list[str]:
     from brvm_extract.adjustments import _same_company
     return [c for c in companies if isinstance(c, str) and c and _same_company(c, symbol, name)]

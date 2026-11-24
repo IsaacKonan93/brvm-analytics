@@ -13,11 +13,12 @@ C:\Users\isaac.konan\Documents\BRVM\daily_update.cmd
 | Step | Command | What happens |
 |---|---|---|
 | 1. Download | `download_all.py` | Fetches the PDFs of all weekdays not yet in `boc/`. Dates already confirmed as "no bulletin" are skipped, except the last 5 days, which are always re-checked in case a bulletin is published late. It also looks up again the brvm.org address of any bulletin recorded without one; the web app links to it. |
-| 2. Extract | `extract_boc.py` | Loads every new or changed PDF into `brvm.db`, then refreshes the derived tables: `bulletins` (the brvm.org links), `securities`, the split adjustments (`corporate_actions`, `equity_quotes_adjusted`…). Nothing is redone for bulletins already extracted. |
-| 3. QC report | `extract_boc.py --qc` | Rewrites [qc_report.md](qc_report.md). |
-| 4. Backup | `backup_db.py --if-older 7` | Once a week, a verified compressed copy of `brvm.db` (see [Backup](#backup)). |
-| 5. Publish web data | `publish_app_data.py` | When there is a new bulletin, rebuilds the slim database of the web app and uploads it to GitHub, where the online app picks it up (see [WEBAPP.md](WEBAPP.md#daily-data-updates-online)). Skipped until `BRVM_GITHUB_TOKEN` is set. |
-| 6. *(optional)* Notebook | `--notebook` | Re-runs [brvm_database_showcase.ipynb](brvm_database_showcase.ipynb) so its charts include the new day. |
+| 2. Share counts | `fetch_shares.py` | Once a day, reads the number of shares of every listed stock on brvm.org's *Capitalisations* page and adds the day's snapshot to `boc/shares_outstanding.csv`. The web app's *Market structure* page uses it. **Not blocking:** if brvm.org is unreachable, the run goes on and the next run tries again. |
+| 3. Extract | `extract_boc.py` | Loads every new or changed PDF into `brvm.db`, then refreshes the derived tables: `bulletins` (the brvm.org links), `shares_outstanding` (the share counts), `securities`, the split adjustments (`corporate_actions`, `equity_quotes_adjusted`…). Nothing is redone for bulletins already extracted. |
+| 4. QC report | `extract_boc.py --qc` | Rewrites [qc_report.md](qc_report.md). |
+| 5. Backup | `backup_db.py --if-older 7` | Once a week, a verified compressed copy of `brvm.db` (see [Backup](#backup)). |
+| 6. Publish web data | `publish_app_data.py` | When there is a new bulletin, rebuilds the slim database of the web app and uploads it to GitHub, where the online app picks it up (see [WEBAPP.md](WEBAPP.md#daily-data-updates-online)). Skipped until `BRVM_GITHUB_TOKEN` is set. |
+| 7. *(optional)* Notebook | `--notebook` | Re-runs [brvm_database_showcase.ipynb](brvm_database_showcase.ipynb) so its charts include the new day. |
 
 Properties:
 * **Incremental and safe to repeat.** Running it twice, or on a holiday, does nothing harmful. A normal day takes about 10 seconds.

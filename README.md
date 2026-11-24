@@ -26,7 +26,7 @@ It runs automatically through the Windows scheduled task "BRVM daily update": we
 
 ## Web app (Streamlit, French/English)
 
-A website for analysing the data, with six pages: market overview, stock explorer, compare & screen, bonds, mutual funds, and the official bulletins (links to every BOC PDF on brvm.org). It has a French/English switch, interactive charts and CSV exports. See **[WEBAPP.md](WEBAPP.md)**.
+A website for analysing the data, with seven pages: market overview (with a daily briefing), market structure, stock explorer, compare & screen, bonds, mutual funds, and the official bulletins (links to every BOC PDF on brvm.org). It has a French/English switch, interactive charts and CSV exports. See **[WEBAPP.md](WEBAPP.md)**.
 
 ```powershell
 .\.env\Scripts\streamlit run webapp/streamlit_app.py     # then open http://localhost:8501
@@ -67,6 +67,7 @@ In VS Code, select the `.env` interpreter as the notebook kernel. The packages i
 | [WEBAPP_ROADMAP.md](WEBAPP_ROADMAP.md) | **Web app plan:** goal, review status of each page, proposed features, priorities, open questions |
 | [WEBAPP.md](WEBAPP.md) | **Web app (v1):** pages, how it works, running locally, putting it online, changing it |
 | [webapp/](webapp/) | The Streamlit app (`streamlit_app.py`, `views/` pages, `app_lib/` data, translations, charts) |
+| [fetch_shares.py](fetch_shares.py) | Daily snapshot of the number of shares of every listed stock from brvm.org (for the market structure) |
 | [publish_app_data.py](publish_app_data.py) | Builds the slim database for the web app and publishes it to GitHub (daily) |
 | [UPDATE.md](UPDATE.md) | **Daily update:** what it does, scheduling with Windows Task Scheduler, logs, troubleshooting |
 | [backup_db.py](backup_db.py) | Weekly backup of `brvm.db` to `..\BRVM_backups` (verified, zipped, last 4 kept) |

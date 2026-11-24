@@ -3,6 +3,7 @@
 import sys
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -158,6 +159,20 @@ def test_simulator():
     assert end["index"] == 1100.0 and end["dividends"] == 50.0
 
 
+def test_market_structure():
+    from app_lib import data
+    v = data.as_of()
+    if data.shares_latest(v).empty:
+        pytest.skip("no share counts yet: run fetch_shares.py")
+    ms = data.market_structure(v, v).set_index("symbol")
+    brvm = data.stats_on(v, v)["equity_market_cap"]
+    assert abs(ms["cap"].sum() / brvm - 1) < 0.005          # rebuilt total = BRVM's published capitalisation
+    assert ms.loc["SNTS", "shares"] == 1e9 and ms["weight"].idxmax() == "SNTS"
+    assert abs(ms["weight"].sum() - 100) < 1e-9
+    ch = data.concentration_history(v)
+    assert ch.index.min() >= pd.Timestamp(data.STRUCTURE_SINCE) and ch["gap_pct"].abs().max() < 5
+
+
 @pytest.mark.parametrize("page", ["stock", "compare"])
 def test_pages_render_price_basis(page):
     from streamlit.testing.v1 import AppTest
@@ -177,7 +192,7 @@ def test_pages_render_price_basis(page):
     assert any("Price-only" in c.value for c in at.caption)
 
 
-@pytest.mark.parametrize("page", ["overview", "stock", "compare", "bonds", "funds", "bulletins"])
+@pytest.mark.parametrize("page", ["overview", "structure", "stock", "compare", "bonds", "funds", "bulletins"])
 @pytest.mark.parametrize("lang", ["fr", "en"])
 def test_pages_render(page, lang):
     from streamlit.testing.v1 import AppTest

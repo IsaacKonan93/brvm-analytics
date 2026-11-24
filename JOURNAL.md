@@ -212,3 +212,32 @@ From 2026-11-24, everything is documented in the project, including plans, propo
 * **Fix found on the way:** 6 stocks had no country because their names carry no country suffix (CORIS BANK INTERNATIONAL, SUCRIVOIRE, SIB, ERIUM, SIEM, TRITURAF), so the country filters missed them. The country is now taken from the BRVM symbol suffix when the name has none (CBIBF → BF, SCRC → CI). This rule agrees with the name rule for all 45 stocks that have both.
 * **Rules documented** in [WEBAPP.md → Compare & screen rules](WEBAPP.md#compare--screen-rules).
 * **Waiting for the user:** the review of step 5, then step 6 (market structure).
+
+## 2026-11-24: step 6 built, market structure
+
+* **Request:** step 6 (user: "step 6").
+* **Problem:** the bulletins give only the total equity market cap, not the capitalisation or number of shares of each stock.
+  * A regression of the daily total on the prices was tried and **rejected**. It gave negative share counts, errors up to 2 %, and SIB at 87 million shares instead of 100 million.
+* **Solution:** brvm.org's *Capitalisations* page lists, for the 48 stocks, the number of shares, price, free-float and total capitalisation.
+  * A new script, [fetch_shares.py](fetch_shares.py), keeps a snapshot per day in `boc/shares_outstanding.csv`. It runs once a day as a new, non-blocking step 2 of the daily update.
+  * The snapshots are loaded into a new table, `shares_outstanding`.
+  * First snapshot: 2026-11-24.
+* **Checks of the approach:**
+  * Shares × our split-adjusted prices give exactly BRVM's total on 2026-11-23 (18,688 bn FCFA).
+  * With today's share counts, the gap to BRVM's month-end total stays within −0.7 % to +3.6 % since 2019, but reaches 12 % in 2016–2017 because shares were issued since. **The page starts in 2019.**
+* **Built:** a new page, **Market structure**, after the overview:
+  * headline figures (SONATEL 20.9 % of the market, top 5 52.0 %);
+  * a treemap (area = capitalisation, colour = day change, grouped by sector or country);
+  * capitalisation by sector and by country (Côte d'Ivoire 58 %, Sénégal 23 %);
+  * concentration since 2019;
+  * a table of every stock, with CSV export.
+* **Choice:** the free-float figures of brvm.org look doubtful (SONATEL 2.2 %), so they are stored but not shown.
+* **Checks:**
+  * 47 tests pass. The new ones cover the rebuilt total against BRVM, SONATEL's 1 billion shares, the concentration gap, and the page parser on a saved sample.
+  * The page renders in FR/EN on the full and the slim database.
+  * The treemap could not be looked at as an image here (Plotly image export not installed): to be checked in the browser.
+* **Docs:**
+  * [WEBAPP.md → Market structure rules](WEBAPP.md#market-structure-rules);
+  * [UPDATE.md](UPDATE.md), step 2;
+  * [EXTRACTION.md → Technical tables](EXTRACTION.md#technical-tables).
+* **Waiting for the user:** the review of step 6, then step 7 (review of the Bonds and Mutual funds pages).

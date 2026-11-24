@@ -34,6 +34,19 @@ CREATE TABLE IF NOT EXISTS bulletins (
     url TEXT                         -- address of the PDF on brvm.org (published days)
 );
 
+-- number of shares of every listed stock, one snapshot per day, from brvm.org "Capitalisations"
+-- (boc/shares_outstanding.csv written by fetch_shares.py); the web app's market structure uses it
+CREATE TABLE IF NOT EXISTS shares_outstanding (
+    date TEXT,                       -- day of the download
+    symbol TEXT,
+    name TEXT,
+    shares REAL,                     -- number of shares
+    price REAL,                      -- price shown on the page (latest session on brvm.org)
+    float_cap REAL,                  -- free-float capitalisation (FCFA)
+    global_cap REAL,                 -- total capitalisation (FCFA) = shares x price
+    PRIMARY KEY (date, symbol)
+);
+
 -- master data, refreshed from the latest bulletin in which a security appears
 CREATE TABLE IF NOT EXISTS securities (
     symbol TEXT PRIMARY KEY,
@@ -192,6 +205,23 @@ def refresh_bulletins(con: sqlite3.Connection, manifest: str | Path = "boc/manif
         con.execute("DELETE FROM bulletins")
         con.executemany("INSERT INTO bulletins VALUES (?, ?, ?)", rows)
     return sum(r[1] == "published" for r in rows)
+
+
+def refresh_shares(con: sqlite3.Connection, path: str | Path = "boc/shares_outstanding.csv") -> int:
+    """Rebuild `shares_outstanding` from the snapshots of fetch_shares.py. Returns the number of snapshots.
+    A missing file leaves the table as it is."""
+    import csv
+
+    path = Path(path)
+    if not path.exists():
+        return 0
+    with open(path, newline="", encoding="utf-8") as f:
+        rows = [(r["date"], r["symbol"], r["name"], float(r["shares"]), float(r["price"]),
+                 float(r["float_cap"] or 0), float(r["global_cap"])) for r in csv.DictReader(f)]
+    with con:
+        con.execute("DELETE FROM shares_outstanding")
+        con.executemany("INSERT INTO shares_outstanding VALUES (?, ?, ?, ?, ?, ?, ?)", rows)
+    return len({r[0] for r in rows})
 
 
 def refresh_securities(con: sqlite3.Connection) -> None:

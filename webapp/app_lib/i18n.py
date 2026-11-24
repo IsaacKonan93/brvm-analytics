@@ -34,6 +34,37 @@ LABELS: dict[str, tuple[str, str]] = {
     "page_bonds": ("Obligations", "Bonds"),
     "page_funds": ("OPCVM", "Mutual funds"),
     "page_bulletins": ("Bulletins officiels (BOC)", "Official bulletins (BOC)"),
+    # market structure (step 6)
+    "page_structure": ("Structure du marché", "Market structure"),
+    "no_shares": ("Nombre de titres indisponible : lancer fetch_shares.py (voir WEBAPP.md).",
+                  "Share counts unavailable: run fetch_shares.py (see WEBAPP.md)."),
+    "nb_companies": ("Sociétés cotées", "Listed companies"),
+    "largest_company": ("Poids de {name}", "Weight of {name}"),
+    "top5_share": ("Poids des 5 premières", "Weight of the top 5"), "top1_share": ("Poids de la première", "Weight of the largest"),
+    "group_by": ("Regrouper par", "Group by"),
+    "cap": ("Capitalisation", "Market cap"), "cap_fcfa": ("Capitalisation (FCFA)", "Market cap (FCFA)"),
+    "weight": ("Poids %", "Weight %"), "rank": ("Rang", "Rank"), "shares": ("Nombre de titres", "Shares"),
+    "treemap_title": ("Le marché en une image : surface = capitalisation, couleur = variation du jour",
+                      "The market at a glance: area = market cap, colour = day change"),
+    "treemap_note": ("Bleu : hausse, rouge : baisse, gris : inchangé (échelle jusqu'à ±7,5 %, la limite journalière). "
+                     "Survoler un rectangle pour le détail.",
+                     "Blue: up, red: down, grey: unchanged (scale up to ±7.5%, the daily limit). Hover a rectangle "
+                     "for details."),
+    "cap_by_sector": ("Capitalisation par secteur (% du marché)", "Market cap by sector (% of the market)"),
+    "cap_by_country": ("Capitalisation par pays (% du marché)", "Market cap by country (% of the market)"),
+    "concentration_title": ("Concentration du marché depuis 2019 (fin de mois, % de la capitalisation)",
+                            "Market concentration since 2019 (month end, % of market cap)"),
+    "concentration_note": ("Calculée avec le nombre de titres actuel : l'écart avec la capitalisation publiée par la "
+                           "BRVM reste entre {lo} et {hi} sur la période.",
+                           "Computed with today's share counts: the gap with BRVM's published market cap stays "
+                           "between {lo} and {hi} over the period."),
+    "structure_table": ("Capitalisation par valeur", "Market cap by stock"),
+    "structure_note": ("Capitalisation = nombre de titres (page « Capitalisations » de brvm.org, relevé du {date}) × "
+                       "cours de référence ajusté. Exacte pour les séances récentes ; pour les séances plus anciennes, "
+                       "suppose qu'aucun titre n'a été émis depuis.",
+                       "Market cap = number of shares (brvm.org \"Capitalisations\" page, taken on {date}) x adjusted "
+                       "reference price. Exact for recent sessions; for older sessions it assumes no shares were "
+                       "issued since."),
     # compare & screen: performance table and simulator (step 5)
     "tab_performance": ("Performances", "Performance"), "tab_simulator": ("Simulateur", "Simulator"),
     "1W": ("1S", "1W"),

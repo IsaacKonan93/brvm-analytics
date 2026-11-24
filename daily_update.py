@@ -96,6 +96,9 @@ def main(argv: list[str] | None = None) -> int:
         ok = True
         if not args.no_download:
             ok &= run("download", ["download_all.py"], log)
+            # number of shares of each stock from brvm.org (market structure of the web app); not blocking:
+            # a failure only means no snapshot today, it is retried at the next run
+            run("share counts", ["fetch_shares.py"], log)
         ok &= run("extract", ["extract_boc.py"], log)
         ok &= run("qc report", ["extract_boc.py", "--qc"], log)
         if ok:  # weekly backup of brvm.db (skipped if the newest backup is less than 7 days old)

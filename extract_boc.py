@@ -110,6 +110,8 @@ def _refresh_derived(con, boc_dir: Path = Path("boc")) -> None:
     from brvm_extract.adjustments import refresh_adjustments
     n = db.refresh_bulletins(con, boc_dir / "manifest.csv")
     print(f"Bulletin links refreshed: {n} published bulletins")
+    n = db.refresh_shares(con, boc_dir / "shares_outstanding.csv")
+    print(f"Share counts refreshed: {n} daily snapshot(s) from brvm.org")
     db.refresh_securities(con)
     r = refresh_adjustments(con)
     print(f"Derived tables refreshed: {r['actions']} corporate actions on {r['symbols']} stocks, "
