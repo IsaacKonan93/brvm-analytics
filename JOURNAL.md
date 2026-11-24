@@ -306,3 +306,16 @@ From 2026-11-24, everything is documented in the project, including plans, propo
 * **Checked for Streamlit Cloud:** the app imports without PyMuPDF and BeautifulSoup, which Cloud does not install (only `webapp/requirements.txt`).
 * **From now on:** the 20:00 task publishes the new data each evening (step 6 of the daily update), since the token is set.
 * **Waiting for the user:** the deployment on share.streamlit.io (WEBAPP.md, step 4). Then check the public URL and its "data as of" date.
+
+## 2026-11-24: site online
+
+* **User:** deployed the app on Streamlit Community Cloud: **<https://brvm-analytics.streamlit.app/>**.
+* **Checked from outside** (no browser in this session):
+  * The app's health endpoint answers `ok`.
+  * The data file of the release has been downloaded twice: once by the earlier test, and once by the app at start-up.
+  * The address returns a redirect to a script, which is normal: Streamlit Cloud sets a cookie first.
+* **Not checkable from here:** how the pages display. To be checked by the user in the browser:
+  * the "data as of" date (23 Nov 2026, then 24 Nov after tonight's publish);
+  * every page in both languages;
+  * the treemap.
+* **Still open:** BRVM's terms of use, to check before sharing the link.

@@ -55,6 +55,7 @@ For each page, the user reviews it in the browser and says what to keep, change,
 * **2026-11-24:** step 4, the stronger stock page, is built and tested. It is waiting for the user's review in the browser.
 * **2026-11-24:** step 5, the performance table and investment simulator, is built and tested. It is waiting for the user's review in the browser.
 * **2026-11-24:** step 6, market structure, is built and tested. It is waiting for the user's review in the browser.
+* **2026-11-24:** **the site is online at <https://brvm-analytics.streamlit.app/>** (Streamlit Community Cloud, deployed by the user). Remaining: the user's check of the pages online, and BRVM's terms of use before sharing the link.
 * **2026-11-24:** the code is pushed to <https://github.com/IsaacKonan93/brvm-analytics> (commits with the no-reply email), and the data is published (release `data-latest`). Only the Streamlit Community Cloud deployment remains, which is the user's part.
 * **2026-11-24:** step 8, deployment, has started. The decisions are a public repository, generic paths, commits with a GitHub no-reply email, and the daily update on this PC. The personal paths are removed. Waiting for the user's GitHub account, repository, token and no-reply email.
 * **2026-11-24:** step 7, the review of the Bonds and Mutual funds pages, is done. The user chose all 7 proposed fixes and improvements, which are built and tested. All the first-version steps are now built. What remains: the user's check of the pages in the browser, then deployment (step 8).

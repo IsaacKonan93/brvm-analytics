@@ -26,7 +26,7 @@ It runs automatically through the Windows scheduled task "BRVM daily update": we
 
 ## Web app (Streamlit, French/English)
 
-Code on GitHub: <https://github.com/IsaacKonan93/brvm-analytics>. The data for the online app is published each evening as the release `data-latest`.
+**Online: <https://brvm-analytics.streamlit.app/>** (Streamlit Community Cloud). Code on GitHub: <https://github.com/IsaacKonan93/brvm-analytics>. The data for the online app is published each evening as the release `data-latest`.
 
 A website for analysing the data, with seven pages: market overview (with a daily briefing), market structure, stock explorer, compare & screen, bonds, mutual funds, and the official bulletins (links to every BOC PDF on brvm.org). It has a French/English switch, interactive charts and CSV exports. See **[WEBAPP.md](WEBAPP.md)**.
 

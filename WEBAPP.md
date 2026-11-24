@@ -1,5 +1,7 @@
 # BRVM web app (Streamlit, FR/EN)
 
+**Online:** <https://brvm-analytics.streamlit.app/> (deployed on 2026-11-24 from <https://github.com/IsaacKonan93/brvm-analytics>, branch `main`, main file `webapp/streamlit_app.py`, Python 3.12, secret `BRVM_DATA_URL`).
+
 A public website for analysing the BRVM data in `brvm.db`. It is built with [Streamlit](https://streamlit.io) and Plotly, has a French/English switch, and is designed to be hosted for free on **Streamlit Community Cloud**.
 
 > **This describes version 1.** A page-by-page rebuild is in progress, and deployment is on hold until it is finished. The plan and the status are in [WEBAPP_ROADMAP.md](WEBAPP_ROADMAP.md).
