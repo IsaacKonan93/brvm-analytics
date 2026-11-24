@@ -413,7 +413,7 @@ prices = px.pivot(index="date", columns="symbol", values="adj_ref_price")   # sp
 * **Open it read-only** from the app, so a bug can never modify the data. The daily update is the only writer.
 
   ```python
-  con = sqlite3.connect("file:C:/Users/isaac.konan/Documents/BRVM/brvm.db?mode=ro", uri=True)
+  con = sqlite3.connect("file:brvm.db?mode=ro", uri=True)   # path relative to the project folder
   ```
 * **Reading while it updates is safe.** The database runs in WAL mode: readers keep seeing a consistent state while the daily update writes, and see the new day once it commits. The update takes a few seconds, at 09:00, at 20:00 and at logon (see [UPDATE.md](UPDATE.md)).
 * **Build on the documented tables and views.** These are the stable interface:

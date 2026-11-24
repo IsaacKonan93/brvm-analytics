@@ -24,7 +24,7 @@ A public website for analysing the BRVM data in `brvm.db`. It is built with [Str
 ## Run it locally
 
 ```powershell
-cd C:\Users\isaac.konan\Documents\BRVM
+cd $env:USERPROFILE\Documents\BRVM
 .\.env\Scripts\streamlit run webapp/streamlit_app.py
 ```
 
@@ -33,7 +33,7 @@ Then open <http://localhost:8501>.
 * To try it on the slim online database instead:
 
   ```powershell
-  $env:BRVM_DB = "C:\Users\isaac.konan\Documents\BRVM\brvm_app.db"
+  $env:BRVM_DB = "$env:USERPROFILE\Documents\BRVM\brvm_app.db"
   .\.env\Scripts\streamlit run webapp/streamlit_app.py
   ```
 
@@ -161,12 +161,20 @@ The functions are in [webapp/app_lib/data.py](webapp/app_lib/data.py): `dividend
 
 You need to do steps 1, 2 and 4 yourself, because they create accounts and credentials in your name. Step 3 I can do with you.
 
+**Decisions taken on 2026-11-24:**
+* **Public repository.** The code contains no secrets.
+* **Generic paths in the docs:** `$env:USERPROFILE\Documents\BRVM`, so no personal user name is published.
+* **Commits under your name with your GitHub no-reply email**, so your personal email is not published.
+* **The daily update stays on this PC.** The site updates on the days the PC is on. Moving it to GitHub Actions is possible later (see [WEBAPP_ROADMAP.md](WEBAPP_ROADMAP.md#keeping-the-site-up-to-date)).
+* **Check BRVM's terms of use before sharing the link** (see the note at the top of this file).
+
 1. **GitHub account and repository**
    * Create a free account on <https://github.com>.
    * Create a new repository, for example `brvm-analytics`.
      * *Public* is simplest: the code contains no secrets.
      * *Private* also works: Streamlit Cloud can deploy private repositories. The data file then needs a read token in the app secrets (step 4).
    * Do not add a README or license, since the project already has them.
+   * **No-reply email:** GitHub → Settings → *Emails* → tick *Keep my email addresses private*, and copy the address shown, of the form `12345678+name@users.noreply.github.com`. Before the first push, the commits are rewritten to use it, and the project's git settings use it for the next commits.
 
 2. **Token for the daily data upload**
    * GitHub → Settings → Developer settings → *Fine-grained personal access tokens* → Generate new token.
@@ -180,7 +188,17 @@ You need to do steps 1, 2 and 4 yourself, because they create accounts and crede
 
      Open a new terminal afterwards so that it sees the variables.
 
-3. **Push the code and publish the data**
+3. **Set the commit identity, push the code and publish the data**
+
+   Done once, before the first push, while nothing is published yet. It rewrites the author email of the existing commits, then makes the project use the no-reply email:
+
+   ```powershell
+   git config user.email "<your no-reply address>"
+   git filter-branch -f --env-filter 'export GIT_AUTHOR_EMAIL="<your no-reply address>"; export GIT_COMMITTER_EMAIL="<your no-reply address>"' -- --all
+   git log --format="%an <%ae>" | Sort-Object -Unique    # check: only the no-reply address
+   ```
+
+   Then:
 
    ```powershell
    git remote add origin https://github.com/<your-github-name>/brvm-analytics.git

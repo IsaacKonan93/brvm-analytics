@@ -264,3 +264,25 @@ From 2026-11-24, everything is documented in the project, including plans, propo
   * Both pages render in FR/EN on the full and the slim database.
 * **Rules documented** in [WEBAPP.md → Bonds and funds rules](WEBAPP.md#bonds-and-funds-rules).
 * **Status:** all the steps of the first version are built. **Waiting for the user:** a check of the pages in the browser (steps 1–7), then deployment (step 8).
+
+## 2026-11-24: step 8 started, deployment
+
+* **Request:** step 8 (user: "step 8"). This lifts the hold on deployment decided on 2026-11-23.
+* **Check before publishing:**
+  * The 56 tracked files contain no secrets.
+  * The biggest file is the notebook (1 MB).
+  * Two personal details would have been published: the Windows user name, in 9 example paths across 5 files, and the personal email, on the 14 commits.
+* **User's decisions:**
+  * **Public** repository.
+  * **Replace the paths** with `$env:USERPROFILE\Documents\BRVM` or relative paths. Done: README, UPDATE.md, WEBAPP.md, EXTRACTION.md, and the notebook, whose code now prints only the file name.
+  * **Commits under the user's name with the GitHub no-reply email.** To do before the first push, once the address is known.
+  * **The daily update stays on this PC** for now. GitHub Actions is possible later.
+* **Steps for the user** ([WEBAPP.md → Put it online](WEBAPP.md#put-it-online-streamlit-community-cloud)):
+  1. create the GitHub account and the empty public repository, and copy the no-reply email;
+  2. create the fine-grained token (Contents read/write on that repository only) and store it with the repository name as user environment variables.
+* **Then Claude:**
+  * rewrites the commit email;
+  * adds the remote and pushes;
+  * runs the first `publish_app_data.py`;
+  * guides the Streamlit Community Cloud setup.
+* **Reminder:** check BRVM's terms of use before sharing the link.

@@ -3,7 +3,7 @@
 BRVM publishes the Bulletin Officiel de la Cote (BOC) on the evening of each trading day, around **18:15 GMT**. Abidjan time is GMT, the same as this PC. One command brings `brvm.db` up to date:
 
 ```powershell
-C:\Users\isaac.konan\Documents\BRVM\daily_update.cmd
+& "$env:USERPROFILE\Documents\BRVM\daily_update.cmd"
 ```
 
 ## What it does
@@ -53,7 +53,7 @@ Since the update only fetches what is missing, extra runs cost a few seconds and
 The task only runs while your Windows session is open. To recreate it (e.g. on another PC), run this once in PowerShell, as your user, with no admin rights needed:
 
 ```powershell
-$dir      = "C:\Users\isaac.konan\Documents\BRVM"
+$dir      = "$env:USERPROFILE\Documents\BRVM"
 $action   = New-ScheduledTaskAction -Execute "$dir\.env\Scripts\pythonw.exe" -Argument "daily_update.py" -WorkingDirectory $dir
 $days     = "Monday","Tuesday","Wednesday","Thursday","Friday"
 $logon    = New-ScheduledTaskTrigger -AtLogOn -User "$env:USERDOMAIN\$env:USERNAME"; $logon.Delay = "PT5M"
@@ -70,7 +70,7 @@ Useful commands:
 ```powershell
 Start-ScheduledTask -TaskName "BRVM daily update"                     # run it now
 Get-ScheduledTaskInfo -TaskName "BRVM daily update"                   # last run time and result (0 = OK)
-Get-Content C:\Users\isaac.konan\Documents\BRVM\logs\daily_update.log -Tail 10   # recent runs
+Get-Content "$env:USERPROFILE\Documents\BRVM\logs\daily_update.log" -Tail 10   # recent runs
 Disable-ScheduledTask -TaskName "BRVM daily update"                   # pause
 Unregister-ScheduledTask -TaskName "BRVM daily update" -Confirm:$false  # remove
 ```
@@ -88,7 +88,7 @@ Why 20:00: the bulletin is usually online by about 18:30. If it is late, the nex
 ## Backup
 
 The daily update runs [backup_db.py](backup_db.py) and makes a backup once a week, when the newest one is more than 7 days old.
-* **Where:** `C:\Users\isaac.konan\Documents\BRVM_backups\`, outside the project folder. This protects against a corrupted database or a mistake, not against losing the PC.
+* **Where:** `Documents\BRVM_backups\`, next to the project folder and outside it. This protects against a corrupted database or a mistake, not against losing the PC.
 * **What:** `brvm_YYYY-MM-DD_HHMM.zip`, about 60 MB each, containing `brvm.db` and a `BACKUP_INFO.txt` that gives the last bulletin included.
 * **How:** the copy is taken with SQLite's online backup API, so it is consistent even if the app or the notebook is reading the database. It is then checked (`PRAGMA integrity_check`) before being compressed.
 * **Rotation:** the last 4 backups are kept, about 1 month.

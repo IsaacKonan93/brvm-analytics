@@ -96,7 +96,7 @@ In VS Code, select the `.env` interpreter as the notebook kernel. The packages i
 ## Installation
 
 ```powershell
-cd C:\Users\isaac.konan\Documents\BRVM
+cd $env:USERPROFILE\Documents\BRVM
 .\.env\Scripts\Activate.ps1          # activate the venv
 pip install -r requirements.txt
 ```
