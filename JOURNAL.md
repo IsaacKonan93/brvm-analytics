@@ -84,3 +84,19 @@ From 2026-11-24, everything is documented in the project, including plans, propo
 * **Checked:** the brvm.org links of 2,524 of the 2,529 bulletins are already stored in the manifest. 1,136 of them carry a suffix, so they can't be guessed from the date.
 * **Rule from the user:** document everything from now on (plans, proposals, decisions) in .md files in the project. This journal and the roadmap were created for that.
 * **Waiting for the user:** the answers to the roadmap's [open questions](WEBAPP_ROADMAP.md#open-questions).
+
+## 2026-11-24: open questions answered
+
+* **First version:** all four feature groups were chosen:
+  * daily briefing + events;
+  * stronger stock page;
+  * performance table + screener;
+  * simulator + market structure.
+
+  The BOC links are included as requested.
+* **Returns:** total return (dividends reinvested) is shown **by default**, with a switch to price only. The reason is that BRVM yields of 6–10% make price-only returns misleading.
+* **Bulletins page:** a date picker plus a list of recent bulletins, filterable by month and year.
+* **Daily update online:** decided at deployment, either this PC or GitHub Actions.
+* **Stock explorer:** its review is moved until after it is rebuilt with the new features.
+* **Not chosen for now:** the weekly and monthly recap, bond schedules. They stay as "after v1".
+* The build order and the decisions are in [WEBAPP_ROADMAP.md → Decisions](WEBAPP_ROADMAP.md#decisions) and [Priorities](WEBAPP_ROADMAP.md#priorities).
