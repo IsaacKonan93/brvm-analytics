@@ -286,3 +286,23 @@ From 2026-11-24, everything is documented in the project, including plans, propo
   * runs the first `publish_app_data.py`;
   * guides the Streamlit Community Cloud setup.
 * **Reminder:** check BRVM's terms of use before sharing the link.
+
+## 2026-11-24: code pushed and data published
+
+* **User:**
+  * created the GitHub account `IsaacKonan93` and the public, empty repository `IsaacKonan93/brvm-analytics`;
+  * stored the token and the repository name as user environment variables.
+* **Commit identity:**
+  * All 15 commits were rewritten to `Isaac Konan <192088093+IsaacKonan93@users.noreply.github.com>`, with the numeric id read from GitHub's public API. This was done before the first push.
+  * The files are unchanged: there is no diff between the old and the new last commit.
+  * The local backup refs of the old history were deleted, and the project's git settings now use the no-reply address.
+* **Push:** `main` is at <https://github.com/IsaacKonan93/brvm-analytics>.
+  * 56 files, no data, PDF, log or virtual environment.
+  * GitHub shows only the no-reply address.
+  * The token was passed to git for that command only and is not stored in the git settings.
+* **Data:** the first `publish_app_data.py` created the release `data-latest` and uploaded `brvm_app.db.zip` (21 MB, last bulletin 2026-11-23).
+  * Public URL: `https://github.com/IsaacKonan93/brvm-analytics/releases/download/data-latest/brvm_app.db.zip`.
+  * Downloaded anonymously and opened by the app's own download code: integrity ok, the new tables are present, and the copy is reused on the next check.
+* **Checked for Streamlit Cloud:** the app imports without PyMuPDF and BeautifulSoup, which Cloud does not install (only `webapp/requirements.txt`).
+* **From now on:** the 20:00 task publishes the new data each evening (step 6 of the daily update), since the token is set.
+* **Waiting for the user:** the deployment on share.streamlit.io (WEBAPP.md, step 4). Then check the public URL and its "data as of" date.
