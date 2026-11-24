@@ -34,6 +34,49 @@ LABELS: dict[str, tuple[str, str]] = {
     "page_bonds": ("Obligations", "Bonds"),
     "page_funds": ("OPCVM", "Mutual funds"),
     "page_bulletins": ("Bulletins officiels (BOC)", "Official bulletins (BOC)"),
+    # stock page tabs (step 4)
+    "tab_dividends": ("Dividendes", "Dividends"), "tab_liquidity": ("Liquidité", "Liquidity"),
+    "tab_valuation": ("Valorisation", "Valuation"), "tab_events": ("Événements", "Events"),
+    "div_announced": ("Annoncé : {label}, le {date}.", "Announced: {label}, on {date}."),
+    "no_dividend": ("Aucun dividende depuis 2016.", "No dividend since 2016."),
+    "ttm_yield": ("Rendement sur 12 mois", "Trailing 12-month yield"),
+    "div_cagr": ("Croissance du dividende (5 ans, par an)", "Dividend growth (5 years, per year)"),
+    "years_paid": ("Années avec dividende (depuis 2016)", "Years with a dividend (since 2016)"),
+    "div_per_year": ("Dividende net ajusté par année de paiement (FCFA)", "Adjusted net dividend per payment year (FCFA)"),
+    "ex_date": ("Détachement", "Ex-date"), "pay_date": ("Paiement", "Payment"),
+    "div_printed": ("Dividende net publié", "Net dividend as printed"), "div_adj": ("Dividende ajusté", "Adjusted dividend"),
+    "yield_ex": ("Rendement au détachement %", "Yield at ex-date %"),
+    "div_note": ("Dividendes nets par action (après retenue à la source), ajustés des fractionnements. Rendement au "
+                 "détachement : dividende / cours de la veille. Rendement sur 12 mois : dividendes détachés depuis un an "
+                 "/ dernier cours ; la BRVM publie, elle, le rendement du dernier dividende même s'il date de plus d'un an.",
+                 "Net dividends per share (after withholding tax), adjusted for splits. Yield at ex-date: dividend / "
+                 "previous close. Trailing 12-month yield: dividends gone ex in the last year / last price; BRVM's "
+                 "published yield uses the last dividend even when it is more than a year old."),
+    "avg_value_day": ("Valeur moyenne échangée / séance", "Average value traded per session"),
+    "traded_share": ("Séances avec échanges", "Sessions with trades"),
+    "avg_volume_day": ("Volume moyen / séance (titres)", "Average volume per session (shares)"),
+    "liq_rank": ("Rang de liquidité", "Liquidity rank"),
+    "liq_rank_val": ("{rank}e sur {n}", "{rank} of {n}"), "liq_rank_first": ("1er sur {n}", "1 of {n}"),
+    "liq_note": ("Moyennes sur toutes les séances de la période, y compris celles sans échange. Rang par valeur "
+                 "moyenne échangée parmi les {n} actions cotées.",
+                 "Averages over every session of the period, including those without trades. Rank by average value "
+                 "traded among the {n} listed stocks."),
+    "not_listed": ("Valeur non cotée à la dernière séance.", "Stock not quoted at the last session."),
+    "monthly_value_stock": ("Valeur échangée par mois, 3 dernières années (FCFA)", "Value traded per month, last 3 years (FCFA)"),
+    "spread_hist": ("Écart achat-vente à la clôture (% du milieu)", "Bid-ask spread at the close (% of mid)"),
+    "avg_spread": ("Écart moyen : {pct} sur les {n} dernières séances avec offre et demande.",
+                   "Average spread: {pct} over the last {n} sessions with both a bid and an ask."),
+    "sector_median": ("Médiane du secteur {sector} ({n} valeurs)", "{sector} median ({n} stocks)"),
+    "sector_per_median": ("PER médian du secteur", "Sector median P/E"),
+    "sector_yield_median": ("Rendement médian du secteur", "Sector median yield"),
+    "market_median": ("Médiane du marché", "Market median"),
+    "per_hist": ("PER (cours / bénéfice)", "P/E ratio"), "yield_hist": ("Rendement net %", "Net yield %"),
+    "val_note": ("PER et rendement net publiés par la BRVM. Les PER négatifs ou supérieurs à 100 et les rendements "
+                 "supérieurs à 30 % sont écartés. Le secteur actuel de la valeur est appliqué à tout l'historique "
+                 "(classification BRVM depuis 2023, modifiée en 2025).",
+                 "P/E and net yield as published by BRVM. P/E ratios below 0 or above 100 and yields above 30 % are "
+                 "left out. The stock's current sector is used over the whole history (BRVM classification since "
+                 "2023, changed in 2025)."),
     # performance basis (total return)
     "basis": ("Performance", "Performance"),
     "basis_tr": ("Dividendes réinvestis", "Dividends reinvested"),

@@ -325,6 +325,108 @@ def order_book(v: str, symbol: str) -> pd.DataFrame:
                     WHERE symbol = ? AND market = 'equities' ORDER BY date DESC LIMIT 20""", (symbol,))
 
 
+# ---------------------------------------------------------------- stock page: dividends, liquidity, valuation
+# (WEBAPP_ROADMAP.md, step 4)
+
+PER_MAX = 100.0    # P/E above this (or negative) is left out of charts and medians: not meaningful
+YIELD_MAX = 30.0   # net yields above 30 % are misprints or one-off payments
+
+
+@st.cache_data(show_spinner=False)
+def dividend_history(v: str, symbol: str) -> pd.DataFrame:
+    """Dividends of one stock (table dividend_events): ex-date, payment date, net amount as printed,
+    split-adjusted amount, and yield at the ex-date (adjusted dividend / previous adjusted close, %)."""
+    try:
+        df = query("""SELECT e.ex_date, e.div_date, e.div_amount, e.adj_div_amount, q.adj_prev_close
+                      FROM dividend_events e
+                      LEFT JOIN equity_quotes_adjusted q ON q.symbol = e.symbol AND q.date = e.ex_date
+                      WHERE e.symbol = ? ORDER BY e.ex_date""", (symbol,), dates=("ex_date", "div_date"))
+    except Exception:  # database built before the table existed
+        return pd.DataFrame(columns=["ex_date", "div_date", "div_amount", "adj_div_amount", "adj_prev_close", "yield_ex"])
+    df["yield_ex"] = df["adj_div_amount"] / df["adj_prev_close"] * 100
+    return df
+
+
+def dividend_stats(divs: pd.DataFrame, price: float | None, as_of: str) -> dict:
+    """Trailing 12-month yield, 5-year growth of the yearly dividend, years with a dividend.
+
+    divs: dividend_history(); price: last adjusted price. Years are payment years."""
+    out = {"ttm_yield": None, "cagr_5y": None, "years_paid": 0, "years": 0, "by_year": pd.Series(dtype=float)}
+    if divs.empty:
+        return out
+    end = pd.Timestamp(as_of)
+    ttm = divs.loc[divs["ex_date"] > end - pd.Timedelta(days=365), "adj_div_amount"].sum()
+    if price:
+        out["ttm_yield"] = ttm / price * 100
+    by_year = divs.groupby(divs["div_date"].dt.year)["adj_div_amount"].sum()
+    out["by_year"] = by_year
+    last = int(by_year.index.max())
+    if last - 5 in by_year.index and by_year[last - 5] > 0:
+        out["cagr_5y"] = ((by_year[last] / by_year[last - 5]) ** (1 / 5) - 1) * 100
+    out["years_paid"] = int((by_year > 0).sum())
+    return out
+
+
+@st.cache_data(show_spinner=False)
+def liquidity_table(v: str, days: int) -> pd.DataFrame:
+    """For every stock quoted on the last session, over the last `days` days: average and median value
+    traded per session, share of sessions with trades (%), average volume, and the rank by average value.
+    Sessions without trades count as 0."""
+    since = (dt.date.fromisoformat(v) - dt.timedelta(days=days)).isoformat()
+    q = query("""SELECT symbol, date, COALESCE(value, 0) AS value, COALESCE(volume, 0) AS volume
+                 FROM equity_quotes WHERE date > ? AND symbol IN (SELECT symbol FROM equity_quotes WHERE date = ?)""",
+              (since, v))
+    g = q.groupby("symbol").agg(avg_value=("value", "mean"), median_value=("value", "median"),
+                                traded_pct=("volume", lambda s: (s > 0).mean() * 100),
+                                avg_volume=("volume", "mean"), sessions=("date", "size"))
+    g["rank"] = g["avg_value"].rank(ascending=False, method="min").astype(int)
+    return g
+
+
+@st.cache_data(show_spinner=False)
+def monthly_value_of(v: str, symbol: str) -> pd.Series:
+    df = query("""SELECT substr(date, 1, 7) || '-01' AS date, SUM(COALESCE(value, 0)) AS value FROM equity_quotes
+                  WHERE symbol = ? GROUP BY 1 ORDER BY 1""", (symbol,))
+    return df.set_index("date")["value"]
+
+
+@st.cache_data(show_spinner=False)
+def spreads(v: str, symbol: str, sessions: int = 90) -> pd.DataFrame:
+    """Best bid / ask at the close and the spread in % of the mid price, last `sessions` sessions with both."""
+    df = query("""SELECT date, bid_price, ask_price FROM order_book
+                  WHERE symbol = ? AND market = 'equities' AND bid_price > 0 AND ask_price > 0
+                  ORDER BY date DESC LIMIT ?""", (symbol, sessions))
+    df["spread_pct"] = (df["ask_price"] - df["bid_price"]) / ((df["ask_price"] + df["bid_price"]) / 2) * 100
+    return df.sort_values("date").set_index("date")
+
+
+@st.cache_data(show_spinner=False)
+def _valuation_all(v: str) -> pd.DataFrame:
+    """P/E and net yield of every stock and session, cleaned (see PER_MAX, YIELD_MAX), with the stock's
+    current sector (the sector codes only exist since 2023 and changed in 2025)."""
+    q = query("""SELECT q.date, q.symbol, q.per, q.net_yield, s.sector FROM equity_quotes q
+                 JOIN securities s USING (symbol)""")
+    q["per"] = q["per"].where((q["per"] > 0) & (q["per"] <= PER_MAX))
+    q["net_yield"] = q["net_yield"].where((q["net_yield"] >= 0) & (q["net_yield"] <= YIELD_MAX))
+    return q
+
+
+@st.cache_data(show_spinner=False)
+def valuation_history(v: str, symbol: str) -> tuple[pd.DataFrame, str | None, int]:
+    """P/E and net yield of one stock with the median of its sector and of the market, per session.
+    Returns (frame, sector code, number of stocks in the sector)."""
+    q = _valuation_all(v)
+    own = q[q["symbol"] == symbol]
+    if own.empty:
+        return pd.DataFrame(), None, 0
+    sector = own["sector"].iloc[-1]
+    peers = q[q["sector"] == sector]
+    out = own.set_index("date")[["per", "net_yield"]]
+    out = out.join(peers.groupby("date")[["per", "net_yield"]].median().add_prefix("sector_"))
+    out = out.join(q.groupby("date")[["per", "net_yield"]].median().add_prefix("market_"))
+    return out, sector, int(peers["symbol"].nunique())
+
+
 def _matching_companies(companies: list[str], symbol: str, name: str) -> list[str]:
     from brvm_extract.adjustments import _same_company
     return [c for c in companies if isinstance(c, str) and c and _same_company(c, symbol, name)]

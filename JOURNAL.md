@@ -166,3 +166,24 @@ From 2026-11-24, everything is documented in the project, including plans, propo
   * Orders of magnitude: dividends add 4 to 8 % a year on top of the price return, consistent with BRVM yields.
 * **Docs:** [EXTRACTION.md → Dividends and total return](EXTRACTION.md#dividends-and-total-return-dividend_events--pk-symbol-div_date), [WEBAPP.md → Pages](WEBAPP.md#pages).
 * **Waiting for the user:** the review of step 3, then step 4 (stronger stock page).
+
+## 2026-11-24: step 4 built, stronger stock page
+
+* **Request:** step 4 (user: "step 4").
+* **Built:** below the price chart, the stock page now has four tabs:
+  * **Dividends:** the dividend announced and not yet paid; trailing 12-month yield; 5-year dividend growth; years paid; dividend per year; every dividend with its ex-date (📄 BOC) and yield at the ex-date.
+  * **Liquidity** (3 months / 1 year / 3 years): value and volume per session, share of sessions traded, liquidity rank among the 48 listed stocks, value per month, order book and spread over 90 sessions.
+  * **Valuation:** P/E and net yield since 2016 against the sector and market medians.
+  * **Events:** splits, notices, meetings, which were already on the page.
+* **Choices made while building:**
+  * **The sector is the stock's current sector over the whole history,** because BRVM's sector codes only exist since 2023 and changed in 2025.
+  * **P/E and yields are cleaned for charts and medians:** P/E outside 0 to 100 and yields above 30 % are left out (the printed P/E reaches 1,920).
+  * **The 12-month yield counts the last 365 days only,** unlike BRVM's yield, which keeps the last dividend even when it is old (STAC: 3.03 % published, 0 % here).
+* **Checked against the data:**
+  * SONATEL's 12-month yield equals BRVM's 4.46 %.
+  * SGBC's 2019–2021 dividend cut is real: the amounts are printed and visible in the price drops.
+* **Checks:**
+  * 41 tests pass.
+  * The page renders for five stocks: two large payers, one without a dividend since 2022, one without any dividend, one delisted. It renders on the full and the slim database, in both languages.
+* **Rules documented** in [WEBAPP.md → Stock page rules](WEBAPP.md#stock-page-rules).
+* **Waiting for the user:** the review of the stock page (steps 3 and 4), then step 5 (performance table and investment simulator).

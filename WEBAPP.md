@@ -12,10 +12,11 @@ A public website for analysing the BRVM data in `brvm.db`. It is built with [Str
 2. [Pages](#pages)
 3. [How it works](#how-it-works)
 4. [Daily briefing rules](#daily-briefing-rules)
-5. [Put it online (Streamlit Community Cloud)](#put-it-online-streamlit-community-cloud)
-6. [Daily data updates online](#daily-data-updates-online)
-7. [Changing the app](#changing-the-app)
-8. [Tests](#tests)
+5. [Stock page rules](#stock-page-rules)
+6. [Put it online (Streamlit Community Cloud)](#put-it-online-streamlit-community-cloud)
+7. [Daily data updates online](#daily-data-updates-online)
+8. [Changing the app](#changing-the-app)
+9. [Tests](#tests)
 
 ## Run it locally
 
@@ -46,7 +47,7 @@ Wherever a session date is shown, a **📄 BOC** link opens that day's official 
 | Page | What it shows |
 |---|---|
 | **Market overview** | Session picker (default: last session). **Daily briefing:** a written summary of the session in French or English; *Highlights* (52-week highs and lows, moves close to the ±7.5 % limit, unusual trading, splits, new notices); *Upcoming* (general meetings, dividend payments, splits and first listings announced in the bulletins), each with the 📄 bulletin announcing it. Rules: [Daily briefing rules](#daily-briefing-rules). Headline indices (BRVM Composite, BRVM 30, BRVM Prestige; BRVM 10 before 2023) with day and year-to-date change. Equity and bond market cap, value traded, rising / falling / unchanged. Composite history with range buttons (1M → All). Top gainers and losers. Most traded stocks. Sector indices since 1 January. Market cap of equities vs bonds over time. Value traded per month with its 12-month average. |
-| **Stock explorer** | Stock picker; `?symbol=SNTS` in the URL opens that stock directly. KPIs: last adjusted price and day change, YTD, 1-year return (with dividends reinvested by default), P/E, net yield, last dividend. Price chart with a volume panel below: with dividends reinvested it shows two lines, the price with dividends reinvested and the split-adjusted price, so the gap between them is the dividends. Dividends per year (adjusted). Splits, with the BRVM notice as evidence. Latest order book (best bid/ask, spread). Notices and shareholder meetings of the company. |
+| **Stock explorer** | Stock picker; `?symbol=SNTS` in the URL opens that stock directly. Caption: country, sector, compartment, last session with its 📄 BOC. KPIs: last adjusted price and day change, YTD and 1-year return (dividends reinvested by default), P/E, net yield, last dividend. Price chart with a volume panel below; with dividends reinvested it shows the price with dividends reinvested next to the split-adjusted price. Four tabs: **Dividends**: a dividend announced and not yet paid; trailing 12-month yield, 5-year growth of the yearly dividend, years with a dividend; dividend per payment year; every dividend with its ex-date (📄 BOC), payment date, amount as printed, adjusted amount and yield at the ex-date. **Liquidity**, over 3 months, 1 year or 3 years: average value and volume per session, share of sessions with trades, liquidity rank among the listed stocks; value traded per month; order book at the close and the bid-ask spread over the last 90 sessions. **Valuation**: P/E and net yield since 2016 against the median of the stock's sector and of the market. **Events**: splits, notices, shareholder meetings. Rules: [Stock page rules](#stock-page-rules). |
 | **Compare & screen** | *Compare:* up to 8 stocks over YTD / 1Y / 3Y / 5Y / All, rebased to 100, with dividends reinvested by default. Return, annualised volatility and maximum drawdown. Correlation heatmap of daily returns. *Screener:* every listed stock on the last session, with filters on sector, compartment, country, P/E range, minimum yield and minimum average daily value traded over 3 months. Sortable, CSV export. |
 | **Bonds** | Every listed bond on the last session, with filters on issuer, category and maturity: coupon, maturity, nominal, price, accrued coupon, next coupon, amortisation. Coupon vs maturity chart, colored by issuer when 3 or fewer issuers are selected. History of one bond (price, accrued coupon). Value traded per year, equities vs bonds. |
 | **Official bulletins (BOC)** | Pick a date to open that session's BOC on brvm.org. On a holiday or weekend, the page says there was no bulletin and offers the previous one. Below that, the list of bulletins of a year, filterable by month: date, weekday, status, link. CSV export. |
@@ -105,6 +106,21 @@ The Market overview computes the briefing for the chosen session, so any past se
 **Calibration on 2026:** about 1 unusual-trading event and 1 limit move per session, and 3 to 4 new 52-week highs on average during that rising year.
 
 **2016–2017 bulletins** have no market statistics. The rising/falling counts and the value traded are then computed from the quotes, which give the same values as BRVM's figures where both exist.
+
+## Stock page rules
+
+The functions are in [webapp/app_lib/data.py](webapp/app_lib/data.py): `dividend_history`, `dividend_stats`, `liquidity_table`, `spreads` and `valuation_history`.
+
+| Item | Rule |
+|---|---|
+| Dividends | From `dividend_events` (see [EXTRACTION.md → Dividends and total return](EXTRACTION.md#dividends-and-total-return-dividend_events--pk-symbol-div_date)): net amounts after withholding tax, adjusted for splits. |
+| Yield at ex-date | Adjusted dividend / adjusted close of the previous session. |
+| Trailing 12-month yield | Dividends gone ex in the last 365 days / last adjusted price. BRVM's published yield uses the last dividend even when it is older, e.g. STAC: 3.03 % published, 0 % here, because its last dividend was in 2022. |
+| Dividend growth | Yearly dividend (by payment year) of the last payment year against 5 years earlier, per year. It can be high after a cut: SGBC paid 206 to 368 FCFA in 2019–2021, then 2,299 in 2026. |
+| Announced dividend | A dividend or split notice of the last bulletins with a future date, matched to the company by name (as for the daily briefing). |
+| Liquidity | Over the chosen period. Every session counts, including those without trades (value 0). Rank by average value traded among the stocks quoted on the last session. |
+| Spread | (best ask − best bid) / mid price at the close, over the last 90 sessions with both a bid and an ask. The slim online database keeps 90 sessions of order book, so this works online too. |
+| Valuation | P/E and net yield as printed by BRVM. P/E below 0 or above 100 and yields above 30 % are left out. The sector is the stock's **current** sector over the whole history: BRVM's sector codes only exist since 2023 and changed in 2025. The medians include the stock itself. |
 
 ## Put it online (Streamlit Community Cloud)
 

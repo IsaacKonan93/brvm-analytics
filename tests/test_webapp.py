@@ -112,6 +112,21 @@ def test_dividend_events_and_total_return():
     assert m.index.min().strftime("%Y-%m-%d") >= "2025-11-21" and m.notna().all().all()
 
 
+def test_stock_page_data():
+    from app_lib import data
+    v = data.as_of()
+    h = data.stock_history(v, "SNTS")
+    s = data.dividend_stats(data.dividend_history(v, "SNTS"), h["adj_ref_price"].iloc[-1], v)
+    assert round(s["ttm_yield"], 2) == h["net_yield"].iloc[-1]   # same as BRVM's yield when paid within a year
+    assert s["by_year"][2026] == 174.0 and s["years_paid"] == 10
+    sg = data.dividend_stats(data.dividend_history(v, "SGBC"), None, v)["by_year"]
+    assert sg[2019] == 206.0                                    # the 2019-2021 cut, as printed and seen in prices
+    lt = data.liquidity_table(v, 91)
+    assert lt.loc["SNTS", "rank"] == 1 and len(lt) == 48
+    val, sector, n = data.valuation_history(v, "SGBC")
+    assert sector == "FIN" and n == 17 and val["per"].max() <= data.PER_MAX
+
+
 @pytest.mark.parametrize("page", ["stock", "compare"])
 def test_pages_render_price_basis(page):
     from streamlit.testing.v1 import AppTest
