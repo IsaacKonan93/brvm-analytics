@@ -319,3 +319,4 @@ From 2026-11-24, everything is documented in the project, including plans, propo
   * every page in both languages;
   * the treemap.
 * **Still open:** BRVM's terms of use, to check before sharing the link.
+* **At deployment, Streamlit committed `.devcontainer/devcontainer.json`** on GitHub, under the user's account (a Codespaces setup, harmless). The local commit was rebased on it and pushed. WEBAPP.md now says to run `git pull --rebase` when a push is refused.

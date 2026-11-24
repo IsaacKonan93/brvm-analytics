@@ -237,6 +237,7 @@ Notes about Streamlit Community Cloud (free tier):
 * An app with no visitors for several days is put to sleep. The next visitor clicks "wake up" and waits about a minute.
 * It has about 1 GB of memory, which is enough for this app.
 * Code changes go online automatically when you `git push`.
+* The repository can also change on GitHub's side: Streamlit added `.devcontainer/devcontainer.json` at deployment (a GitHub Codespaces setup, not used by the site). Run `git pull --rebase` before `git push` if the push is refused with *fetch first*.
 
 ## Changing the app
 
