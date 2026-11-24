@@ -34,6 +34,8 @@ A website for analysing the data, with five pages: market overview, stock explor
 
 To make it public on Streamlit Community Cloud (free), follow the step-by-step guide in [WEBAPP.md → Put it online](WEBAPP.md#put-it-online-streamlit-community-cloud). Once set up, the daily update also publishes the new data to the site each evening.
 
+**Rebuild in progress (since 2026-11-23):** the app is being revised page by page, and deployment is on hold until that is finished. The plan, the feature proposals and the review status are in **[WEBAPP_ROADMAP.md](WEBAPP_ROADMAP.md)**. Every decision on the project is logged by date in [JOURNAL.md](JOURNAL.md).
+
 ## Using the database: showcase notebook
 
 **[brvm_database_showcase.ipynb](brvm_database_showcase.ipynb)** is a guided tour of `brvm.db`. Each section answers a typical question with one SQL query and one table or chart:
@@ -61,7 +63,9 @@ In VS Code, select the `.env` interpreter as the notebook kernel. The packages i
 
 | File | Purpose |
 |---|---|
-| [WEBAPP.md](WEBAPP.md) | **Web app:** pages, how it works, running locally, putting it online, changing it |
+| [JOURNAL.md](JOURNAL.md) | **Project journal:** dated log of requests, decisions and their reasons |
+| [WEBAPP_ROADMAP.md](WEBAPP_ROADMAP.md) | **Web app plan:** goal, review status of each page, proposed features, priorities, open questions |
+| [WEBAPP.md](WEBAPP.md) | **Web app (v1):** pages, how it works, running locally, putting it online, changing it |
 | [webapp/](webapp/) | The Streamlit app (`streamlit_app.py`, `views/` pages, `app_lib/` data, translations, charts) |
 | [publish_app_data.py](publish_app_data.py) | Builds the slim database for the web app and publishes it to GitHub (daily) |
 | [UPDATE.md](UPDATE.md) | **Daily update:** what it does, scheduling with Windows Task Scheduler, logs, troubleshooting |

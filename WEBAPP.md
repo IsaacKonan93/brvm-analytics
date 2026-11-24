@@ -2,6 +2,8 @@
 
 A public website for analysing the BRVM data in `brvm.db`. It is built with [Streamlit](https://streamlit.io) and Plotly, has a French/English switch, and is designed to be hosted for free on **Streamlit Community Cloud**.
 
+> **This describes version 1.** A page-by-page rebuild is in progress, and deployment is on hold until it is finished. The plan and the status are in [WEBAPP_ROADMAP.md](WEBAPP_ROADMAP.md).
+
 > **Before going public:** the data is republished from the BRVM *Bulletins Officiels de la Cote*. Check BRVM's terms of use for redistributing their market data. Every page shows the source and a "not investment advice" notice.
 
 ## Contents
@@ -44,7 +46,7 @@ The language switch (Français / English) is in the sidebar. The URL keeps it (`
 | **Bonds** | Every listed bond on the last session, with filters on issuer, category and maturity: coupon, maturity, nominal, price, accrued coupon, next coupon, amortisation. Coupon vs maturity chart, colored by issuer when 3 or fewer issuers are selected. History of one bond (price, accrued coupon). Value traded per year, equities vs bonds. |
 | **Mutual funds** | Ranking of the funds with a recent NAV: latest NAV and its date, 1-year and 3-year performance (based on the NAV dates, since NAVs are often published late). Filters on category and manager. NAV chart of up to 4 funds, rebased to 100, with misprinted values filtered out. |
 
-Not in this first version: bond yield-to-maturity, portfolio tracking, alerts.
+Not in this first version: bond yield-to-maturity, portfolio tracking, alerts. The features planned for the next version are listed in [WEBAPP_ROADMAP.md → Features](WEBAPP_ROADMAP.md#features).
 
 ## How it works
 
