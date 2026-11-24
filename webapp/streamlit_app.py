@@ -15,7 +15,8 @@ import streamlit as st  # noqa: E402
 
 from app_lib import data  # noqa: E402
 from app_lib.i18n import LANGS, fmt_date, t  # noqa: E402
-from views import bonds, compare, funds, overview, stock  # noqa: E402
+from views import bonds, bulletins, compare, funds, overview, stock  # noqa: E402
+from views.common import boc_md  # noqa: E402
 
 st.set_page_config(page_title="BRVM", page_icon=":material/monitoring:", layout="wide")
 
@@ -34,6 +35,7 @@ pages = [
     st.Page(compare.render, title=t("page_compare"), icon=":material/compare_arrows:", url_path="compare"),
     st.Page(bonds.render, title=t("page_bonds"), icon=":material/account_balance:", url_path="bonds"),
     st.Page(funds.render, title=t("page_funds"), icon=":material/savings:", url_path="funds"),
+    st.Page(bulletins.render, title=t("page_bulletins"), icon=":material/picture_as_pdf:", url_path="bulletins"),
 ]
 page = st.navigation(pages)
 
@@ -45,7 +47,7 @@ except Exception as e:  # no database reachable
 
 with st.sidebar:
     st.caption(t("app_title"))
-    st.markdown(f"**{t('data_as_of', date=fmt_date(v))}**")
+    st.markdown(f"**{t('data_as_of', date=fmt_date(v))}** · {boc_md(v)}")
 
 page.run()
 

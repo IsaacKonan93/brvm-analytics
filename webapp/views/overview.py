@@ -7,7 +7,7 @@ import streamlit as st
 
 from app_lib import charts, data
 from app_lib.i18n import fmt_amount, fmt_date, fmt_num, fmt_pct, t
-from views.common import chart, table
+from views.common import boc_md, chart, table
 
 MOVERS = {"name": ("name", "text"), "ref_price": ("price", "num"), "change_pct": ("change", "pct"),
           "value": ("value", "int")}
@@ -24,7 +24,7 @@ def render():
     d = day.isoformat()
     with head:
         st.title(t("page_overview"))
-        st.caption(f"{t('session')} : {fmt_date(day)}")
+        st.caption(f"{t('session')} : {fmt_date(day)} · {boc_md(day)}")
 
     # ---- headline indices
     hl = data.headline(v, d)

@@ -40,7 +40,20 @@ def test_data_layer_values():
     assert len(rk) > 50 and rk["perf_1y"].notna().sum() > 20
 
 
-@pytest.mark.parametrize("page", ["overview", "stock", "compare", "bonds", "funds"])
+def test_bulletin_links():
+    from app_lib import data
+    v = data.as_of()
+    b = data.bulletins(v).set_index("date")
+    assert b.loc["2026-11-23", "url"] == "https://www.brvm.org/sites/default/files/boc_20261123_2.pdf"  # suffix: not guessable
+    assert b.loc["2018-12-06", "status"] == "unavailable"            # broken link on brvm.org
+    assert b.loc["2025-12-25", "status"] == "none"                   # Christmas
+    published = b[b["status"] == "published"]
+    assert len(published) >= 2529 and published["url"].notna().all()
+    assert data.boc_url(v, "2025-10-30").endswith("boc_20251030_2.pdf")
+    assert data.boc_url(v, "2025-12-25") is None
+
+
+@pytest.mark.parametrize("page", ["overview", "stock", "compare", "bonds", "funds", "bulletins"])
 @pytest.mark.parametrize("lang", ["fr", "en"])
 def test_pages_render(page, lang):
     from streamlit.testing.v1 import AppTest

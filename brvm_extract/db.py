@@ -5,7 +5,7 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT);
@@ -24,6 +24,14 @@ CREATE TABLE IF NOT EXISTS documents (
     status TEXT,                     -- ok | partial | error
     n_warnings INTEGER,
     error TEXT
+);
+
+-- one row per weekday since 2016-08-01, from boc/manifest.csv (written by download_all.py):
+-- was a bulletin published, and where is the official PDF on brvm.org (the web app links to it)
+CREATE TABLE IF NOT EXISTS bulletins (
+    date TEXT PRIMARY KEY,           -- weekday (YYYY-MM-DD)
+    status TEXT,                     -- published | none (holiday, no session) | unavailable (broken link on brvm.org)
+    url TEXT                         -- address of the PDF on brvm.org (published days)
 );
 
 -- master data, refreshed from the latest bulletin in which a security appears
@@ -164,6 +172,26 @@ def save_document(con: sqlite3.Connection, date: str, data: dict) -> None:
         for table in DATED_TABLES:
             _insert(con, table, data.get(table, []))
         _insert(con, "documents", [data["document"]])
+
+
+MANIFEST_STATUS = {"present": "published", "downloaded": "published", "not_found": "none", "failed": "unavailable"}
+
+
+def refresh_bulletins(con: sqlite3.Connection, manifest: str | Path = "boc/manifest.csv") -> int:
+    """Rebuild `bulletins` from the download manifest. Returns the number of published bulletins.
+    A missing manifest (e.g. a database moved without its PDFs) leaves the table as it is."""
+    import csv
+
+    manifest = Path(manifest)
+    if not manifest.exists():
+        return 0
+    with open(manifest, newline="", encoding="utf-8") as f:
+        rows = [(r["date"], MANIFEST_STATUS.get(r["status"], r["status"]), r.get("url") or None)
+                for r in csv.DictReader(f)]
+    with con:
+        con.execute("DELETE FROM bulletins")
+        con.executemany("INSERT INTO bulletins VALUES (?, ?, ?)", rows)
+    return sum(r[1] == "published" for r in rows)
 
 
 def refresh_securities(con: sqlite3.Connection) -> None:

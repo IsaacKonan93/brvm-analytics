@@ -33,6 +33,27 @@ LABELS: dict[str, tuple[str, str]] = {
     "page_compare": ("Comparer & filtrer", "Compare & screen"),
     "page_bonds": ("Obligations", "Bonds"),
     "page_funds": ("OPCVM", "Mutual funds"),
+    "page_bulletins": ("Bulletins officiels (BOC)", "Official bulletins (BOC)"),
+    # official bulletins (links to brvm.org)
+    "bulletins_intro": ("La BRVM publie chaque jour de bourse son Bulletin Officiel de la Cote (BOC). Les liens "
+                        "ouvrent le PDF officiel sur brvm.org.",
+                        "BRVM publishes its official price list, the Bulletin Officiel de la Cote (BOC), every "
+                        "trading day. The links open the official PDF on brvm.org."),
+    "boc": ("BOC", "BOC"), "boc_link": ("📄 BOC", "📄 BOC"),
+    "open_boc": ("Ouvrir le BOC du {date}", "Open the BOC of {date}"),
+    "previous_boc": ("Bulletin précédent : {date}", "Previous bulletin: {date}"),
+    "boc_weekend": ("Pas de séance le week-end.", "No session at weekends."),
+    "boc_none": ("Pas de bulletin le {date} : jour férié ou pas de séance.",
+                 "No bulletin on {date}: holiday or no session."),
+    "boc_unavailable": ("Le bulletin du {date} existe, mais son lien sur brvm.org est cassé.",
+                        "The bulletin of {date} exists, but its link on brvm.org is broken."),
+    "bulletin_list": ("Liste des bulletins", "List of bulletins"),
+    "year": ("Année", "Year"), "month": ("Mois", "Month"), "all_months": ("Tous", "All"),
+    "weekday": ("Jour", "Day"), "status": ("Statut", "Status"),
+    "bst_published": ("Publié", "Published"),
+    "bst_none": ("Pas de bulletin (férié, pas de séance)", "No bulletin (holiday, no session)"),
+    "bst_unavailable": ("Lien cassé sur brvm.org", "Broken link on brvm.org"),
+    "bulletins_count": ("{n} bulletins publiés, {m} jours sans bulletin", "{n} bulletins published, {m} days without a bulletin"),
     # periods
     "1M": ("1M", "1M"), "3M": ("3M", "3M"), "6M": ("6M", "6M"), "YTD": ("Début d'année", "YTD"),
     "1Y": ("1A", "1Y"), "3Y": ("3A", "3Y"), "5Y": ("5A", "5Y"), "ALL": ("Tout", "All"),
@@ -179,6 +200,22 @@ def fmt_amount(x) -> str:
 
 
 _MONTHS_FR = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."]
+
+
+_MONTHS_FR_FULL = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre",
+                   "novembre", "décembre"]
+_MONTHS_EN_FULL = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
+                   "November", "December"]
+_DAYS_FR = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"]
+_DAYS_EN = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+
+
+def month_name(m: int) -> str:
+    return (_MONTHS_FR_FULL if lang() == "fr" else _MONTHS_EN_FULL)[m - 1]
+
+
+def weekday_name(d) -> str:
+    return (_DAYS_FR if lang() == "fr" else _DAYS_EN)[d.weekday()]
 
 
 def fmt_date(d) -> str:

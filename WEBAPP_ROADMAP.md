@@ -43,9 +43,11 @@ For each page, the user reviews it in the browser and says what to keep, change,
 | Compare & screen | Not reviewed; the performance table and simulator are added to it |
 | Bonds | Not reviewed |
 | Mutual funds | Not reviewed |
+| Official bulletins (BOC) | **New**, built on 2026-11-24 (step 1); waiting for the user's review |
 
 * **2026-11-23:** the review was paused while the user thought about the app as a whole.
 * **2026-11-24:** the open questions were answered (see [Decisions](#decisions)). The next step is to build the decided features.
+* **2026-11-24:** step 1, the BOC links, is built and tested. It is waiting for the user's review in the browser.
 * **Deployment online is on hold** until the user says the rebuild is finished. Until then, nothing is pushed to GitHub or published. The deployment steps stay in [WEBAPP.md → Put it online](WEBAPP.md#put-it-online-streamlit-community-cloud).
 
 ## Decisions
@@ -67,9 +69,9 @@ Requested by the user.
 
 | Feature | Detail | Status |
 |---|---|---|
-| **Bulletins page** | A date picker gives the bulletin of that session directly. Below it, a list of the recent bulletins, filterable by month and year, with the link to the PDF on brvm.org. Days without a bulletin (holidays, closures) are marked. | decided |
-| **"📄 BOC" link everywhere** | Every date shown in the app gets a link to that day's bulletin: a session, a split, a dividend, a notice. | decided |
-| **Link, don't re-host** | The app points to BRVM's own files instead of serving copies. This is safer for licensing. | decided |
+| **Bulletins page** | A date picker gives the bulletin of that session directly. Below it, a list of the recent bulletins, filterable by month and year, with the link to the PDF on brvm.org. Days without a bulletin (holidays, closures) are marked. | built, to review |
+| **"📄 BOC" link everywhere** | Every date shown in the app gets a link to that day's bulletin: a session, a split, a notice. Dividend dates are payment dates, which are not bulletin dates, so they have no link. | built, to review |
+| **Link, don't re-host** | The app points to BRVM's own files instead of serving copies. This is safer for licensing. | built, to review |
 
 Technical notes, checked on 2026-11-24:
 * **Where the links are.** The brvm.org address of each PDF is in `boc/manifest.csv`, column `url`:
@@ -77,7 +79,8 @@ Technical notes, checked on 2026-11-24:
   * The 5 without one are 2016-11-07, 2016-12-15, 2017-02-01, 2025-10-30 and 2025-12-01. They were downloaded before the manifest recorded addresses, so their links will be read again from brvm.org.
 * **The link cannot be guessed from the date.** 1,136 addresses carry a suffix (e.g. `boc_20261123_2.pdf`), and some have typos. It must be stored. See [SITE_NOTES.md → PDF filenames](SITE_NOTES.md#pdf-filenames).
 * **Some brvm.org pages link the wrong file.** For those days, the app links the file that was actually checked. See [SITE_NOTES.md → Pages that link the wrong file](SITE_NOTES.md#pages-that-link-the-wrong-file). The daily page itself can also be linked; its address format is in [SITE_NOTES.md → Daily page URL](SITE_NOTES.md#daily-page-url-slug).
-* **Database change.** The links go into the database: a `url` column in `documents`, filled from the manifest. The slim online database ([publish_app_data.py](publish_app_data.py)) must keep this column.
+* **Database change (built).** The links are in a new table, `bulletins`: one row per weekday since 2016-08-01, with `status` and `url`. It is rebuilt from the manifest after every extraction run. This was chosen over the planned `documents.url` column for two reasons: it also records the days without a bulletin, which the page needs, and it survives re-extractions. The slim online database keeps it, and its build checks that the links are there. See [EXTRACTION.md → Technical tables](EXTRACTION.md#technical-tables).
+* **The 5 missing links were found** on brvm.org on 2026-11-24. All 2,529 bulletins now have their address. `download_all.py` looks up any future missing one by itself.
 
 ### 2. Daily briefing (home page, updated each evening)
 

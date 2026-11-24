@@ -7,14 +7,14 @@ import streamlit as st
 
 from app_lib import charts, data
 from app_lib.i18n import fmt_date, fmt_num, t
-from views.common import chart, csv_button, table
+from views.common import boc_md, chart, csv_button, table
 
 
 def render():
     v = data.as_of()
     st.title(t("page_bonds"))
     df = data.bonds_on(v, v)
-    st.caption(f"{t('bonds_listed', n=len(df))} · {t('session')} : {fmt_date(v)}")
+    st.caption(f"{t('bonds_listed', n=len(df))} · {t('session')} : {fmt_date(v)} · {boc_md(v)}")
 
     c = st.columns(3)
     issuers = c[0].multiselect(t("issuer"), sorted(df["issuer"].dropna().unique()), key="bd_issuer")

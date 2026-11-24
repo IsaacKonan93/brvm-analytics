@@ -36,7 +36,7 @@ Then open <http://localhost:8501>.
 
 ## Pages
 
-The language switch (Français / English) is in the sidebar. The URL keeps it (`?lang=en`), so links can be shared in either language. Every chart has hover tooltips, and every table can be sorted and downloaded as CSV.
+The language switch (Français / English) is in the sidebar. Wherever a session date is shown, a **📄 BOC** link opens that day's official bulletin on brvm.org: the sidebar "Data as of", the overview and bonds session, the stock's last session, its order book, its splits and its notices. The app links to BRVM's own files and does not re-host them. The URL keeps it (`?lang=en`), so links can be shared in either language. Every chart has hover tooltips, and every table can be sorted and downloaded as CSV.
 
 | Page | What it shows |
 |---|---|
@@ -44,6 +44,7 @@ The language switch (Français / English) is in the sidebar. The URL keeps it (`
 | **Stock explorer** | Stock picker; `?symbol=SNTS` in the URL opens that stock directly. KPIs: last adjusted price and day change, YTD, 1-year return, P/E, net yield, last dividend. Split-adjusted price with a volume panel below. Dividends per year (adjusted). Splits, with the BRVM notice as evidence. Latest order book (best bid/ask, spread). Notices and shareholder meetings of the company. |
 | **Compare & screen** | *Compare:* up to 8 stocks over YTD / 1Y / 3Y / 5Y / All, rebased to 100. Return, annualised volatility and maximum drawdown. Correlation heatmap of daily returns. *Screener:* every listed stock on the last session, with filters on sector, compartment, country, P/E range, minimum yield and minimum average daily value traded over 3 months. Sortable, CSV export. |
 | **Bonds** | Every listed bond on the last session, with filters on issuer, category and maturity: coupon, maturity, nominal, price, accrued coupon, next coupon, amortisation. Coupon vs maturity chart, colored by issuer when 3 or fewer issuers are selected. History of one bond (price, accrued coupon). Value traded per year, equities vs bonds. |
+| **Official bulletins (BOC)** | Pick a date to open that session's BOC on brvm.org. On a holiday or weekend, the page says there was no bulletin and offers the previous one. Below that, the list of bulletins of a year, filterable by month: date, weekday, status, link. CSV export. |
 | **Mutual funds** | Ranking of the funds with a recent NAV: latest NAV and its date, 1-year and 3-year performance (based on the NAV dates, since NAVs are often published late). Filters on category and manager. NAV chart of up to 4 funds, rebased to 100, with misprinted values filtered out. |
 
 Not in this first version: bond yield-to-maturity, portfolio tracking, alerts. The features planned for the next version are listed in [WEBAPP_ROADMAP.md → Features](WEBAPP_ROADMAP.md#features).
@@ -60,7 +61,7 @@ brvm.db (this PC, updated by daily_update.py)
 | File | Role |
 |---|---|
 | [webapp/streamlit_app.py](webapp/streamlit_app.py) | Entry point: language switch, navigation, "data as of" date, footer |
-| [webapp/views/](webapp/views/) | One module per page (`overview.py`, `stock.py`, `compare.py`, `bonds.py`, `funds.py`), each with a `render()` function. `common.py` has the table, CSV and chart helpers |
+| [webapp/views/](webapp/views/) | One module per page (`overview.py`, `stock.py`, `compare.py`, `bonds.py`, `funds.py`, `bulletins.py`), each with a `render()` function. `common.py` has the table, CSV and chart helpers |
 | [webapp/app_lib/data.py](webapp/app_lib/data.py) | Every database query. The database is opened **read-only**. Queries are cached and keyed on the latest bulletin date, so a new bulletin refreshes everything |
 | [webapp/app_lib/i18n.py](webapp/app_lib/i18n.py) | French/English labels (`LABELS`), sector / country / fund-category names, number formats (FR `1 234,56`, EN `1,234.56`; amounts `13 277 Mds` / `13.28 tn`) |
 | [webapp/app_lib/charts.py](webapp/app_lib/charts.py) | Plotly charts with the project's validated palette: fixed series order, one y-axis per chart (price and volume are two stacked panels), diverging blue↔red with a gray midpoint |

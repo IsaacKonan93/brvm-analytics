@@ -66,9 +66,11 @@ def build() -> dict:
     check = dst.execute("PRAGMA integrity_check").fetchone()[0]
     last, n = dst.execute("SELECT MAX(date), COUNT(*) FROM documents").fetchone()
     probe = dst.execute("SELECT COUNT(*) FROM equity_quotes_adjusted WHERE date = ?", (last,)).fetchone()[0]
+    links = dst.execute("SELECT COUNT(*) FROM bulletins WHERE url IS NOT NULL").fetchone()[0]  # BOC links of the app
     dst.close()
-    if check != "ok" or not probe:
-        raise RuntimeError(f"slim database check failed: integrity={check}, adjusted rows on {last}={probe}")
+    if check != "ok" or not probe or not links:
+        raise RuntimeError(f"slim database check failed: integrity={check}, adjusted rows on {last}={probe}, "
+                           f"bulletin links={links}")
     OUT_ZIP.unlink(missing_ok=True)
     with zipfile.ZipFile(OUT_ZIP, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as z:
         z.write(OUT_DB, "brvm_app.db")

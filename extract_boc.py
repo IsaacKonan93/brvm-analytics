@@ -76,7 +76,7 @@ def main(argv: list[str] | None = None) -> int:
     files = select_files(con, args.boc, args)
     print(f"{len(files)} PDF(s) to extract -> {args.db} (parser {PARSER_VERSION}, {args.workers} workers)", flush=True)
     if not files:
-        _refresh_derived(con)  # cheap; picks up edits of data/corporate_actions_manual.csv
+        _refresh_derived(con, args.boc)  # cheap; picks up edits of data/corporate_actions_manual.csv
         con.close()
         return 0
     t0 = time.time()
@@ -98,15 +98,17 @@ def main(argv: list[str] | None = None) -> int:
                 bo = len(data.get("bond_quotes", []))
                 print(f"[{n}/{len(files)}] {d['date']} {d['status']:<7} equities={eq} bonds={bo} "
                       f"warnings={d['n_warnings']}{' ' + d['error'] if d['error'] else ''}", flush=True)
-    _refresh_derived(con)
+    _refresh_derived(con, args.boc)
     print(f"Done in {time.time() - t0:.0f}s: {status}")
     con.close()
     return 0
 
 
-def _refresh_derived(con) -> None:
-    """Tables computed across bulletins: securities master, corporate actions, adjusted prices."""
+def _refresh_derived(con, boc_dir: Path = Path("boc")) -> None:
+    """Tables computed across bulletins: bulletin links, securities master, corporate actions, adjusted prices."""
     from brvm_extract.adjustments import refresh_adjustments
+    n = db.refresh_bulletins(con, boc_dir / "manifest.csv")
+    print(f"Bulletin links refreshed: {n} published bulletins")
     db.refresh_securities(con)
     r = refresh_adjustments(con)
     print(f"Derived tables refreshed: {r['actions']} corporate actions on {r['symbols']} stocks, "

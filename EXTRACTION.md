@@ -64,6 +64,7 @@ Both steps are incremental. A PDF is re-extracted when:
 | TOTAL lines printed in the BOC | `table_totals` | bulletin × total line |
 | Master data (latest name, sector, bond terms) | `securities` | security |
 | Processing status, warnings and checks | `documents`, `extraction_log` | bulletin / message |
+| Which days have a bulletin, and the official PDF address on brvm.org | `bulletins` | weekday |
 
 The "plus fortes hausses / baisses" (top movers) block is **not** stored, because it can be derived from `equity_quotes`.
 
@@ -282,6 +283,9 @@ Some 2025 bulletins embed a font without a usable character map, so the text com
 * `documents`: one row per PDF.
   * `layout`, `locale`, `pages`, `status` (`ok` / `partial` / `error`), `n_warnings`;
   * `parser_version`, `file_size`, `file_mtime` (used for incremental runs).
+* `bulletins`: one row per weekday since 2016-08-01, rebuilt after each run from `boc/manifest.csv` (written by `download_all.py`).
+  * `status`: `published`, `none` (holiday or no session) or `unavailable` (the bulletin exists but its link on brvm.org is broken: 2018-12-06 and 2018-12-07);
+  * `url`: the address of the PDF on brvm.org. It is stored, not computed, because it cannot be guessed from the date (suffixes, typos: see [SITE_NOTES.md](SITE_NOTES.md#pdf-filenames)). The web app links to it.
 * `extraction_log`: every warning and check result per bulletin, with `section` and `level` (`info` / `warning` / `error`).
 * `table_totals`: TOTAL lines printed in the BOC.
   * `level`: `group` (e.g. COMPARTIMENT PRINCIPAL), `category` (e.g. TOTAL - OBLIGATIONS CLASSIQUES) or `grand` (TOTAL - Marché des actions/obligations);

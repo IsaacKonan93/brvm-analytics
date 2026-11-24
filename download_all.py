@@ -59,6 +59,22 @@ def write_manifest(path: Path, rows: dict[str, dict]) -> None:
           flush=True)
 
 
+def fill_missing_urls(manifest: dict[str, dict]) -> int:
+    """Look up again the brvm.org address of bulletins downloaded before the manifest kept it
+    (the web app links to the official PDF). Returns the number of addresses found."""
+    found = 0
+    for key, row in manifest.items():
+        if row["status"] in ("present", "downloaded") and not row.get("url"):
+            try:
+                url = brvm_boc.find_pdf_url(dt.date.fromisoformat(key))
+            except brvm_boc.NetworkError:
+                continue  # retried at the next run
+            if url:
+                row["url"] = url
+                found += 1
+    return found
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description="Download all available BRVM BOC PDFs")
     p.add_argument("--start", type=brvm_boc._date, default=None, help=f"first date (default: {OLDEST_KNOWN})")
@@ -121,6 +137,9 @@ def main(argv: list[str] | None = None) -> int:
             if done % 25 == 0:
                 write_manifest(manifest_path, manifest)
 
+    filled = fill_missing_urls(manifest)
+    if filled:
+        print(f"  links found again for {filled} bulletin(s) downloaded without one", flush=True)
     write_manifest(manifest_path, manifest)
 
     pdfs = list(args.out.glob("boc_*.pdf"))

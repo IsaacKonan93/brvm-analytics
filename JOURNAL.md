@@ -100,3 +100,18 @@ From 2026-11-24, everything is documented in the project, including plans, propo
 * **Stock explorer:** its review is moved until after it is rebuilt with the new features.
 * **Not chosen for now:** the weekly and monthly recap, bond schedules. They stay as "after v1".
 * The build order and the decisions are in [WEBAPP_ROADMAP.md → Decisions](WEBAPP_ROADMAP.md#decisions) and [Priorities](WEBAPP_ROADMAP.md#priorities).
+
+## 2026-11-24: step 1 built, links to the official bulletins
+
+* **Request:** start the rebuild with step 1, the BOC links (user said yes).
+* **Database:** a new table, `bulletins`, built from `boc/manifest.csv`. It has one row per weekday, with `published` / `none` / `unavailable` and the brvm.org address. Schema version 3.
+  * It is preferred to the planned `documents.url` column because it also records the days without a bulletin.
+  * The 5 missing addresses were found again on brvm.org, so all 2,529 bulletins have their link.
+  * `download_all.py` now fills any missing address by itself.
+* **App:**
+  * a new page, **Official bulletins (BOC)**: a date picker opens that session's PDF, or explains a holiday or weekend and offers the previous bulletin; below it, a list per year and month;
+  * **📄 BOC** links next to the session dates: sidebar, overview, bonds, stock page, order book, splits, notices.
+* **Checks:**
+  * 33 tests pass. The new test covers the suffixed link of 2026-11-23, the broken links of 2018-12-06, and Christmas 2025.
+  * The page renders in FR and EN on the full and the slim database.
+* **Waiting for the user:** the review of step 1 in the browser.

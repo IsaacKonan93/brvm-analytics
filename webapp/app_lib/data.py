@@ -131,6 +131,30 @@ def sessions(v: str) -> list[dt.date]:
     return [d.date() for d in df["date"]]
 
 
+@st.cache_data(show_spinner=False)
+def bulletins(v: str) -> pd.DataFrame:
+    """Every weekday since 2016-08-01 up to the latest bulletin: status (published | none | unavailable)
+    and the address of the official PDF on brvm.org. Empty if the database has no `bulletins` table."""
+    try:
+        return query("SELECT date, status, url FROM bulletins WHERE date <= ? ORDER BY date DESC", (v,))
+    except Exception:
+        return pd.DataFrame({"date": pd.Series(dtype="datetime64[ns]"), "status": [], "url": []})
+
+
+@st.cache_data(show_spinner=False)
+def boc_urls(v: str) -> dict[str, str]:
+    """{'YYYY-MM-DD': brvm.org PDF address} for every published bulletin."""
+    b = bulletins(v).dropna(subset=["url"])
+    return dict(zip(b["date"].dt.strftime("%Y-%m-%d"), b["url"]))
+
+
+def boc_url(v: str, day) -> str | None:
+    """Address of the bulletin of `day` (date, Timestamp or 'YYYY-MM-DD') on brvm.org, if published."""
+    if day is None or day != day:
+        return None
+    return boc_urls(v).get(pd.Timestamp(day).strftime("%Y-%m-%d"))
+
+
 def session_on_or_before(v: str, day: dt.date) -> dt.date:
     for s in sessions(v):
         if s <= day:

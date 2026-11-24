@@ -26,7 +26,7 @@ It runs automatically through the Windows scheduled task "BRVM daily update": we
 
 ## Web app (Streamlit, French/English)
 
-A website for analysing the data, with five pages: market overview, stock explorer, compare & screen, bonds, mutual funds. It has a French/English switch, interactive charts and CSV exports. See **[WEBAPP.md](WEBAPP.md)**.
+A website for analysing the data, with six pages: market overview, stock explorer, compare & screen, bonds, mutual funds, and the official bulletins (links to every BOC PDF on brvm.org). It has a French/English switch, interactive charts and CSV exports. See **[WEBAPP.md](WEBAPP.md)**.
 
 ```powershell
 .\.env\Scripts\streamlit run webapp/streamlit_app.py     # then open http://localhost:8501

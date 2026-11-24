@@ -7,7 +7,7 @@ import streamlit as st
 
 from app_lib import charts, data
 from app_lib.i18n import COUNTRIES, SECTOR_CODES, fmt_amount, fmt_date, fmt_num, fmt_pct, name_of, t
-from views.common import chart, table
+from views.common import boc_md, chart, table, with_boc
 
 
 def _return(series: pd.Series, days: int) -> float | None:
@@ -38,7 +38,7 @@ def render():
     divs = data.dividends(v, sym)
 
     st.caption(" · ".join(filter(None, [name_of(COUNTRIES, info["country"]), str(info["compartment"] or ""),
-                                         f"{t('session')} : {fmt_date(h.index[-1])}"])))
+                                         f"{t('session')} : {fmt_date(h.index[-1])}", boc_md(h.index[-1])])))
     k = st.columns(6)
     k[0].metric(t("last_price"), fmt_num(last["adj_ref_price"]), fmt_pct(last["change_pct"]), border=True)
     k[1].metric(t("ytd_pct"), fmt_pct(last["ytd_pct"]), border=True)
@@ -62,8 +62,8 @@ def render():
         st.subheader(t("splits"))
         sp = data.splits(v, sym)
         if len(sp):
-            table(sp, {"date": ("date", "date"), "label": ("ratio", "text"), "source": ("source", "text"),
-                       "evidence": ("evidence", "text")})
+            table(with_boc(sp), {"date": ("date", "date"), "boc": ("boc", "link"), "label": ("ratio", "text"),
+                                 "source": ("source", "text"), "evidence": ("evidence", "text")})
         else:
             st.info(t("no_splits"))
         st.subheader(t("order_book"))
@@ -78,7 +78,7 @@ def render():
             c[1].metric(t("ask"), fmt_num(o["ask_price"]), f"{t('ask_qty')} {fmt_num(o['ask_qty'])}",
                         delta_color="off")
             c[2].metric(t("spread"), fmt_pct(spread, 2, signed=False) if spread is not None else "—")
-            st.caption(fmt_date(o["date"]))
+            st.caption(f"{fmt_date(o['date'])} · {boc_md(o['date'])}")
         else:
             st.info(t("no_data"))
 
@@ -86,7 +86,7 @@ def render():
         n = data.notices_for(v, sym, names[sym])
         if len(n):
             n = n.assign(kind=n["kind"].map(lambda k: t(f"kind_{k}")))
-            table(n, {"date": ("date", "date"), "kind": ("kind", "text"), "reference": ("reference", "text"),
+            table(with_boc(n), {"date": ("date", "date"), "boc": ("boc", "link"), "kind": ("kind", "text"), "reference": ("reference", "text"),
                       "nature": ("nature", "text"), "subject": ("subject", "text")})
         else:
             st.info(t("no_data"))
