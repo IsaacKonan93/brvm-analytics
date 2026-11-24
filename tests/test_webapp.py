@@ -173,6 +173,37 @@ def test_market_structure():
     assert ch.index.min() >= pd.Timestamp(data.STRUCTURE_SINCE) and ch["gap_pct"].abs().max() < 5
 
 
+def test_bond_issuers_and_categories():
+    from app_lib.data import bond_category, bond_issuer
+    assert bond_category("OBLIGATIONS SOUVERAINES") == "SOV" == bond_category("GOVERNMENT BONDS")
+    assert bond_category("OBLIGATIONS GSS D·ENTREPRISES") == "GSS"
+    assert bond_category("FCTC D'INSTITUTIONS FINANCIERES REGIONALES ET INTERNATIONALES") == "FCTC"
+    assert bond_category("OBLIGATIONS D'INSTITUTIONS FINANCIERES REGIONALES ET INTERNATIONALES") == "FIN"
+    assert bond_category("OBLIGATIONS CONVERTIBLES EN ACTIONS") == "CONV"
+    assert bond_issuer("TPNE", "SOV") == bond_issuer("TRESOR PUBLIC DU NIGER", "SOV") == ("STATE:NE", "NE")
+    assert bond_issuer("TPCI (TAUX DE BASE + SPREAD) %", "SOV") == ("STATE:CI", "CI")
+    assert bond_issuer("ETAT DU BURKINA DIASPORA BONDS", "SOV") == ("STATE:BF", "BF")
+    assert bond_issuer("SOCIAL BOND CRRH-UEMOA", "GSS") == ("CRRH-UEMOA", None)
+    assert bond_issuer("BIDC-EBID GSS BOND", "GSS") == ("BIDC-EBID", None)
+    assert bond_issuer("FCTC SONATEL C-1", "FCTC") == ("FCTC SONATEL C-1", None)   # not the state of Senegal
+    import streamlit as st
+    from views.bonds import issuer_label
+    st.session_state.lang = "fr"
+    assert issuer_label("STATE:NE", "NE") == "État : Niger"
+    assert issuer_label("CRRH-UEMOA", float("nan")) == "CRRH-UEMOA"          # NaN country in a DataFrame
+
+
+def test_fund_fixes():
+    from app_lib import data
+    v = data.as_of()
+    nav = data.fund_navs(v)
+    assert nav["nav_date"].max() <= pd.Timestamp(v)                 # 5025-12-05 misprints left out
+    rk = data.fund_ranking(v).set_index("fund_name")
+    assert rk["category"].dropna().isin(["A", "D", "OMLT", "OCT", "OATC", "M", "O", "R", "C"]).all()
+    assert pd.notna(rk.loc["SICAV Abdou DIOUF", "nav_break"]) and pd.isna(rk.loc["SICAV Abdou DIOUF", "perf_1y"])
+    assert rk["perf_1y"].min() > -50
+
+
 @pytest.mark.parametrize("page", ["stock", "compare"])
 def test_pages_render_price_basis(page):
     from streamlit.testing.v1 import AppTest

@@ -241,3 +241,26 @@ From 2026-11-24, everything is documented in the project, including plans, propo
   * [UPDATE.md](UPDATE.md), step 2;
   * [EXTRACTION.md → Technical tables](EXTRACTION.md#technical-tables).
 * **Waiting for the user:** the review of step 6, then step 7 (review of the Bonds and Mutual funds pages).
+
+## 2026-11-24: step 7, review of the Bonds and Mutual funds pages
+
+* **Request:** step 7 (user: "step 7").
+* **Review:** I audited both pages on the real data and reported 8 findings.
+* **The user chose all 7 proposed changes:**
+  * Funds:
+    1. ignore impossible NAV dates (67 rows printed 5025 instead of 2025);
+    2. flag NAV level breaks: SICAV Abdou DIOUF showed −89 % after its NAV went from 17.6 M to 1.85 M, and now has no performance, with a note;
+    3. normalise categories (ACTION, DIVERSIFIE, O, OPCR, RISQUE, "b").
+  * Bonds:
+    4. one issuer per state (TPNE = Trésor public du Niger…): 37 issuers instead of 43;
+    5. 7 short FR/EN categories from 35 section names;
+    6. price in % of nominal;
+    7. liquidity and headline figures: last trade, sessions traded in 3 months, bonds traded today (10 of 210) and in 3 months (144 of 210).
+* **Not changed:** about 5 % of bonds have no maturity year because their names are truncated in the bulletin. A note explains it.
+* **Bug found while testing:** for non-state issuers the empty country became `NaN`, which counts as true, so every company was labelled "État : ". Fixed, with a test.
+* **Checks:**
+  * 49 tests pass.
+  * 81 funds now have a 1-year performance, against 78 before, because the future dates were hiding real NAVs.
+  * Both pages render in FR/EN on the full and the slim database.
+* **Rules documented** in [WEBAPP.md → Bonds and funds rules](WEBAPP.md#bonds-and-funds-rules).
+* **Status:** all the steps of the first version are built. **Waiting for the user:** a check of the pages in the browser (steps 1–7), then deployment (step 8).

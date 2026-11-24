@@ -15,10 +15,11 @@ A public website for analysing the BRVM data in `brvm.db`. It is built with [Str
 5. [Stock page rules](#stock-page-rules)
 6. [Market structure rules](#market-structure-rules)
 7. [Compare & screen rules](#compare--screen-rules)
-8. [Put it online (Streamlit Community Cloud)](#put-it-online-streamlit-community-cloud)
-9. [Daily data updates online](#daily-data-updates-online)
-10. [Changing the app](#changing-the-app)
-11. [Tests](#tests)
+8. [Bonds and funds rules](#bonds-and-funds-rules)
+9. [Put it online (Streamlit Community Cloud)](#put-it-online-streamlit-community-cloud)
+10. [Daily data updates online](#daily-data-updates-online)
+11. [Changing the app](#changing-the-app)
+12. [Tests](#tests)
 
 ## Run it locally
 
@@ -52,9 +53,9 @@ Wherever a session date is shown, a **📄 BOC** link opens that day's official 
 | **Market structure** | Session picker (since 2019). Equity market cap, listed companies, weight of the largest company and of the top 5. **Treemap** of the market: one rectangle per stock, area = capitalisation, colour = day change (blue up, red down, grey unchanged), grouped by sector or country. Capitalisation by sector and by country (% of the market). Concentration since 2019: month-end weight of the largest stock and of the top 5. Table of every stock: rank, capitalisation, weight, number of shares, price, change; CSV export. Rules: [Market structure rules](#market-structure-rules). |
 | **Stock explorer** | Stock picker; `?symbol=SNTS` in the URL opens that stock directly. Caption: country, sector, compartment, last session with its 📄 BOC. KPIs: last adjusted price and day change, YTD and 1-year return (dividends reinvested by default), P/E, net yield, last dividend. Price chart with a volume panel below; with dividends reinvested it shows the price with dividends reinvested next to the split-adjusted price. Four tabs: **Dividends**: a dividend announced and not yet paid; trailing 12-month yield, 5-year growth of the yearly dividend, years with a dividend; dividend per payment year; every dividend with its ex-date (📄 BOC), payment date, amount as printed, adjusted amount and yield at the ex-date. **Liquidity**, over 3 months, 1 year or 3 years: average value and volume per session, share of sessions with trades, liquidity rank among the listed stocks; value traded per month; order book at the close and the bid-ask spread over the last 90 sessions. **Valuation**: P/E and net yield since 2016 against the median of the stock's sector and of the market. **Events**: splits, notices, shareholder meetings. Rules: [Stock page rules](#stock-page-rules). |
 | **Compare & screen** | Four tabs, all following the Performance switch. *Compare:* up to 8 stocks over YTD / 1Y / 3Y / 5Y / All, rebased to 100; return, annualised volatility and maximum drawdown; correlation heatmap of daily returns. *Performance:* every listed stock over 1 week, 1 month, YTD, 1, 3 and 5 years (plus 3 and 5 years per year), with filters on sector and country and a bar chart ranking the stocks over the chosen horizon; sortable, CSV export. *Screener:* every listed stock on the last session, with filters on sector, country, compartment, P/E range, minimum yield and minimum average daily value traded over 3 months, and its 1-year return; sortable, CSV export. *Simulator:* an amount invested in one stock on a chosen date, and its value today with dividends reinvested, with dividends taken in cash, on price only, and in the BRVM Composite; chart and table with gain and gain per year. Rules: [Compare & screen rules](#compare--screen-rules). |
-| **Bonds** | Every listed bond on the last session, with filters on issuer, category and maturity: coupon, maturity, nominal, price, accrued coupon, next coupon, amortisation. Coupon vs maturity chart, colored by issuer when 3 or fewer issuers are selected. History of one bond (price, accrued coupon). Value traded per year, equities vs bonds. |
+| **Bonds** | Headline figures: bond market cap, value traded, bonds traded today and in the last 3 months. Every listed bond on the last session, with filters on issuer (one per state: *State: Côte d'Ivoire*…), category (sovereign, corporate, regional financial institutions, securitisation, GSS, convertible) and maturity: coupon, maturity, price in % of nominal and in FCFA, nominal, accrued coupon, next coupon, amortisation, **last trade** and sessions traded in 3 months. Coupon vs maturity chart, colored by issuer when 3 or fewer issuers are selected. History of one bond (price in % of nominal, accrued coupon). Value traded per year, equities vs bonds. Rules: [Bonds and funds rules](#bonds-and-funds-rules). |
 | **Official bulletins (BOC)** | Pick a date to open that session's BOC on brvm.org. On a holiday or weekend, the page says there was no bulletin and offers the previous one. Below that, the list of bulletins of a year, filterable by month: date, weekday, status, link. CSV export. |
-| **Mutual funds** | Ranking of the funds with a recent NAV: latest NAV and its date, 1-year and 3-year performance (based on the NAV dates, since NAVs are often published late). Filters on category and manager. NAV chart of up to 4 funds, rebased to 100, with misprinted values filtered out. |
+| **Mutual funds** | Ranking of the funds with a recent NAV: latest NAV and its date, 1-year and 3-year performance (based on the NAV dates, since NAVs are often published late). Filters on category and manager. NAV chart of up to 4 funds, rebased to 100, with misprinted values filtered out. Misprinted NAV dates are left out, and a fund whose NAV changed level (e.g. a change of unit) has no performance, with a note. Rules: [Bonds and funds rules](#bonds-and-funds-rules). |
 
 Not in this first version: bond yield-to-maturity, portfolio tracking, alerts. The features planned for the next version are listed in [WEBAPP_ROADMAP.md → Features](WEBAPP_ROADMAP.md#features).
 
@@ -143,6 +144,18 @@ The functions are in [webapp/app_lib/data.py](webapp/app_lib/data.py): `dividend
 | Performance horizons | `performance_table` in [webapp/app_lib/data.py](webapp/app_lib/data.py). Return from the last session on or before the start of the horizon (1 week, 1 month, 31 December of last year, 1, 3 or 5 years earlier) to the last session. A stock listed for less time has no value for that horizon. On *Price only*, the YTD column equals the yearly change printed by BRVM, checked for every stock. |
 | Per year | 3 and 5 years: (1 + return) ^ (1 / years) − 1. |
 | Simulator | `simulate` in [webapp/views/compare.py](webapp/views/compare.py). Purchase at the reference price of the first session from the chosen date; fractional shares; no brokerage fees. Four scenarios: *dividends reinvested* (total return), *dividends taken in cash* (shares × price + net dividends received so far), *price only*, and the same amount in the BRVM Composite, which is a price index without dividends. |
+
+## Bonds and funds rules
+
+| Item | Rule |
+|---|---|
+| Bond issuer | `bond_issuer` in [webapp/app_lib/data.py](webapp/app_lib/data.py). The bulletins name the same state in several ways (TPCI, "TPCI (TAUX DE BASE + SPREAD) %", TPNE and "TRESOR PUBLIC DU NIGER", TPBF, "ETAT DU BURKINA" and its diaspora bonds…), so sovereign bonds are grouped by state. Other issuers lose the *green / social / gender bond* labels (SOCIAL BOND CRRH-UEMOA → CRRH-UEMOA). Result: 37 issuers instead of 43, with Côte d'Ivoire at 70 bonds. |
+| Bond category | `bond_category`: the 35 section names used since 2016 (French and English) are mapped to 7 short categories: sovereign, corporate, regional financial institutions, securitisation (FCTC), green/social/sustainability (GSS), convertible, sukuk. |
+| Price in % of nominal | Reference price / nominal × 100. The nominal is the remaining one, which falls as an amortising bond is repaid (e.g. 4,000 FCFA instead of 10,000), so the % compares across bonds. |
+| Bond liquidity | Last session with a volume, and number of sessions with a volume over the last 3 months. On 2026-11-23, 10 of 210 bonds traded, and 144 traded at least once in 3 months. |
+| Fund NAV dates | A NAV dated after its bulletin is a misprint (67 rows dated 5025 instead of 2025) and is left out. |
+| Fund NAV level break | After removing isolated misprints, a move of more than ×1.5 (or ÷1.5) between two NAV dates that lasts is treated as a change of unit, not a performance (e.g. SICAV Abdou DIOUF in 2026: 17.6 M → 1.85 M). A performance whose period contains such a break is not computed, and a note names the fund. 4 funds have one since 2016. |
+| Fund category | The printed codes are normalised: ACTION → A, DIVERSIFIE → D, "A MOYEN ET LON" → OMLT, OPCR / RISQUE → capital risque, "b" → unknown. Each fund gets its latest known category. |
 
 ## Put it online (Streamlit Community Cloud)
 

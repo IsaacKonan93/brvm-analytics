@@ -581,18 +581,70 @@ def screener(v: str) -> pd.DataFrame:
 
 # ---------------------------------------------------------------- bonds
 
+# Sovereign issuers appear under several names (TPCI, "TPCI (TAUX DE BASE + SPREAD) %", TPNE and
+# "TRESOR PUBLIC DU NIGER", TPBF and "ETAT DU BURKINA"...): one issuer per state, by country code.
+_SOVEREIGN = [("CI", ("TPCI", "COTE D'IVOIRE", "COTE D IVOIRE")), ("SN", ("SENEGAL", "TPSN", "EOS")),
+              ("ML", ("MALI", "TPML")), ("BF", ("BURKINA", "TPBF")), ("BJ", ("BENIN", "TPBJ")),
+              ("NE", ("NIGER", "TPNE")), ("TG", ("TOGO", "TPTG")), ("GW", ("BISSAU", "TPGB"))]
+_ISSUER_TAGS = ("SOCIAL BOND ", "GREEN BOND ", "GENDER BOND ", "SUSTAINABILITY BOND ")
+
+
+def bond_issuer(raw: str | None, category: str | None) -> tuple[str, str | None]:
+    """(issuer key, country code if a state). States: 'STATE:CI'... Others: the name without the
+    green/social/gender bond labels (e.g. 'SOCIAL BOND CRRH-UEMOA' -> 'CRRH-UEMOA')."""
+    name = (raw or "").upper().strip()
+    if category in ("SOV", "GSS", None) or name.startswith(("TP", "ETAT", "TRESOR")):
+        for code, keys in _SOVEREIGN:
+            if any(name.startswith(k) if k.startswith("TP") or k == "EOS" else k in name for k in keys):
+                if name.startswith(("TP", "ETAT", "TRESOR", "EOS")) or category == "SOV":
+                    return f"STATE:{code}", code
+    for tag in _ISSUER_TAGS:
+        if name.startswith(tag):
+            name = name[len(tag):]
+    name = name.replace(" GSS BOND", "").strip()
+    return name or (raw or ""), None
+
+
+def bond_category(section: str | None) -> str | None:
+    """Short category of a bond from its bulletin section, French or English (35 variants since 2016):
+    SOV, CORP, FIN (regional financial institutions), FCTC (securitisation), GSS, CONV, SUKUK."""
+    s = (section or "").upper().replace("·", "'")
+    for code, keys in (("CONV", ("CONVERTIBLE",)), ("SUKUK", ("SUKUK",)), ("GSS", ("GSS",)),
+                       ("FCTC", ("FCTC", "TITRISATION", "SECURITIZATION")),
+                       ("SOV", ("SOUVERAIN", "SOVEREIGN", "D'ETAT", "GOVERNMENT")),
+                       ("FIN", ("INSTITUTIONS FINANCIERES", "REGIONAL")),
+                       ("CORP", ("ENTREPRISES", "PRIVEES", "CORPORATE"))):
+        if any(k in s for k in keys):
+            return code
+    return None
+
+
 @st.cache_data(show_spinner=False)
 def bonds_on(v: str, day: str) -> pd.DataFrame:
-    return query("""SELECT symbol, name, section, issuer, coupon_rate, issue_year, maturity_year, nominal, price,
-                           ref_price, volume, value, accrued_coupon, periodicity, coupon_amount, next_coupon_date,
-                           amort_type
-                    FROM bond_quotes WHERE date = ?""", (day,), dates=("next_coupon_date",))
+    """Bonds quoted on `day` with: short category, issuer key and country (bond_issuer), price in % of the
+    nominal (the remaining nominal for amortising bonds), last trade date and sessions traded in 3 months."""
+    df = query("""SELECT symbol, name, section, issuer, coupon_rate, issue_year, maturity_year, nominal, price,
+                         ref_price, volume, value, accrued_coupon, periodicity, coupon_amount, next_coupon_date,
+                         amort_type
+                  FROM bond_quotes WHERE date = ?""", (day,), dates=("next_coupon_date",))
+    df["category"] = df["section"].map(bond_category)
+    keys = [bond_issuer(i, c) for i, c in zip(df["issuer"], df["category"])]
+    df["issuer_key"] = [k for k, _ in keys]
+    df["issuer_country"] = [c for _, c in keys]
+    df["price_pct"] = df["ref_price"] / df["nominal"] * 100
+    since = (dt.date.fromisoformat(day) - dt.timedelta(days=91)).isoformat()
+    liq = query("""SELECT symbol, MAX(CASE WHEN volume > 0 THEN date END) AS last_trade,
+                          SUM(CASE WHEN volume > 0 AND date > ? THEN 1 ELSE 0 END) AS traded_3m
+                   FROM bond_quotes WHERE date <= ? GROUP BY symbol""", (since, day), dates=("last_trade",))
+    return df.merge(liq, on="symbol", how="left")
 
 
 @st.cache_data(show_spinner=False)
 def bond_history(v: str, symbol: str) -> pd.DataFrame:
-    return query("""SELECT date, ref_price, price, nominal, accrued_coupon, volume, value FROM bond_quotes
-                    WHERE symbol = ? ORDER BY date""", (symbol,)).set_index("date")
+    h = query("""SELECT date, ref_price, price, nominal, accrued_coupon, volume, value FROM bond_quotes
+                 WHERE symbol = ? ORDER BY date""", (symbol,)).set_index("date")
+    h["price_pct"] = h["ref_price"] / h["nominal"] * 100
+    return h
 
 
 @st.cache_data(show_spinner=False)
@@ -604,13 +656,35 @@ def traded_by_year(v: str) -> pd.DataFrame:
 
 # ---------------------------------------------------------------- funds
 
+# fund categories as printed, normalised to the codes of i18n.FUND_CATEGORIES (None: unknown)
+FUND_CATEGORY_MAP = {"ACTION": "A", "DIVERSIFIE": "D", "A MOYEN ET LON": "OMLT", "OPCR": "R", "RISQUE": "R",
+                     "b": None}
+NAV_BREAK = 1.5  # a NAV that moves by more than x1.5 (or /1.5) between two NAV dates, and stays there: level break
+
+
 @st.cache_data(show_spinner=False)
 def fund_navs(v: str) -> pd.DataFrame:
-    """One row per fund and NAV date (latest category / manager)."""
-    df = query("""SELECT fund_name, manager, category, nav_date, nav FROM fund_navs
-                  WHERE nav IS NOT NULL AND nav_date IS NOT NULL""", dates=("nav_date",))
+    """One row per fund and NAV date. NAV dates after their bulletin are misprints (e.g. 5025-12-05 for
+    2025-12-05) and are left out. Category: the fund's latest known category, normalised."""
+    df = query("""SELECT date, fund_name, manager, category, nav_date, nav FROM fund_navs
+                  WHERE nav IS NOT NULL AND nav_date IS NOT NULL AND nav_date <= date""", dates=("nav_date",))
+    df["category"] = df["category"].map(lambda c: FUND_CATEGORY_MAP.get(c, c) if isinstance(c, str) else None)
+    latest_cat = df.dropna(subset=["category"]).groupby("fund_name")["category"].last()
     df = df.drop_duplicates(["fund_name", "nav_date"], keep="last").sort_values("nav_date")
-    return df
+    df["category"] = df["fund_name"].map(latest_cat)
+    return df.drop(columns="date")
+
+
+def nav_breaks(nav: pd.DataFrame) -> pd.DataFrame:
+    """Level breaks: NAV dates where a fund's cleaned NAV moves by more than NAV_BREAK x from the previous
+    NAV date (a change of unit or share basis, not a performance). Columns fund_name, nav_date."""
+    out = []
+    for f, g in nav.groupby("fund_name"):
+        s = drop_spikes(g.set_index("nav_date")["nav"])
+        r = s / s.shift()
+        hit = r[(r > NAV_BREAK) | (r < 1 / NAV_BREAK)]
+        out += [(f, d) for d in hit.index]
+    return pd.DataFrame(out, columns=["fund_name", "nav_date"])
 
 
 def drop_spikes(s: pd.Series, window: int = 11, tol: float = 0.25) -> pd.Series:
@@ -625,6 +699,8 @@ def fund_ranking(v: str) -> pd.DataFrame:
     last = nav.groupby("fund_name").tail(1).copy()
     last = last[last["nav_date"] >= pd.Timestamp(v) - pd.Timedelta(days=60)]
     out = last.rename(columns={"nav": "nav_last", "nav_date": "nav_date_last"})
+    breaks = nav_breaks(nav)
+    out["nav_break"] = out["fund_name"].map(breaks.groupby("fund_name")["nav_date"].max())
     for years, col in ((1, "perf_1y"), (3, "perf_3y")):
         tgt = out[["fund_name", "nav_date_last"]].assign(target=out["nav_date_last"] - pd.Timedelta(days=365 * years))
         past = pd.merge_asof(tgt.sort_values("target"),
@@ -632,5 +708,8 @@ def fund_ranking(v: str) -> pd.DataFrame:
                              on="target", by="fund_name", tolerance=pd.Timedelta(days=15))
         out = out.merge(past[["fund_name", "nav_past"]], on="fund_name", how="left")
         out[col] = (out["nav_last"] / out["nav_past"] - 1) * 100
+        # a level break inside the period makes the performance meaningless: left out
+        start = out["nav_date_last"] - pd.Timedelta(days=365 * years)
+        out.loc[out["nav_break"].notna() & (out["nav_break"] > start), col] = float("nan")
         out = out.drop(columns="nav_past")
     return out.reset_index(drop=True)

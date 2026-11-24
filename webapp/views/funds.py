@@ -29,6 +29,9 @@ def render():
             "nav_last": ("nav", "num2"), "nav_date_last": ("nav_date", "date"), "perf_1y": ("perf_1y", "pct"),
             "perf_3y": ("perf_3y", "pct")}
     table(sel, spec, height=460)
+    broken = sel[sel["nav_break"].notna() & sel["perf_1y"].isna()]["fund_name"].tolist()
+    if broken:
+        st.caption(t("nav_break_note", funds=", ".join(broken)))
     csv_button(sel[list(spec)], f"brvm_funds_{v}.csv", "fd_csv")
 
     default = sel.dropna(subset=["perf_1y"])["fund_name"].head(3).tolist()

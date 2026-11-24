@@ -34,6 +34,25 @@ LABELS: dict[str, tuple[str, str]] = {
     "page_bonds": ("Obligations", "Bonds"),
     "page_funds": ("OPCVM", "Mutual funds"),
     "page_bulletins": ("Bulletins officiels (BOC)", "Official bulletins (BOC)"),
+    # bonds and funds review (step 7)
+    "state_issuer": ("État : {country}", "State: {country}"),
+    "bond_value_day": ("Valeur échangée (obligations)", "Value traded (bonds)"),
+    "bonds_traded_day": ("Obligations échangées ce jour", "Bonds traded today"),
+    "bonds_traded_3m": ("Échangées au moins une fois en 3 mois", "Traded at least once in 3 months"),
+    "n_of_m": ("{n} sur {m}", "{n} of {m}"),
+    "price_pct": ("Prix (% du nominal)", "Price (% of nominal)"),
+    "price_pct_hist": ("Cours de référence en % du nominal restant", "Reference price in % of the remaining nominal"),
+    "last_trade": ("Dernier échange", "Last trade"), "traded_3m": ("Séances échangées (3 mois)", "Sessions traded (3 months)"),
+    "bonds_note": ("Prix en % du nominal restant (le nominal baisse avec l'amortissement). Émetteurs souverains regroupés "
+                   "par État (TPCI, TPNE, « Trésor public du Niger »…). Une obligation sans année d'échéance a un nom "
+                   "tronqué dans le bulletin.",
+                   "Price in % of the remaining nominal (the nominal falls as the bond is repaid). Sovereign issuers are "
+                   "grouped by state (TPCI, TPNE, \"Trésor public du Niger\"...). A bond without a maturity year has a "
+                   "truncated name in the bulletin."),
+    "nav_break_note": ("Changement de niveau de la valeur liquidative détecté (variation de plus de 50 % maintenue, "
+                       "probablement un changement d'unité) : performance non calculée pour {funds}.",
+                       "NAV level break detected (a move of more than 50% that lasts, probably a change of unit): "
+                       "performance not computed for {funds}."),
     # market structure (step 6)
     "page_structure": ("Structure du marché", "Market structure"),
     "no_shares": ("Nombre de titres indisponible : lancer fetch_shares.py (voir WEBAPP.md).",
@@ -299,11 +318,18 @@ SECTOR_CODES = {  # 2025+ classification (sector_code in equity_quotes)
     "AGR": ("Agriculture", "Agriculture"), "DIS": ("Distribution", "Distribution"), "TRP": ("Transport", "Transport"),
     "AUT": ("Autres secteurs", "Other sectors"),
 }
+BOND_CATEGORIES = {  # short categories of app_lib.data.bond_category
+    "SOV": ("Souverain", "Sovereign"), "CORP": ("Entreprises", "Corporate"),
+    "FIN": ("Institutions financières régionales", "Regional financial institutions"),
+    "FCTC": ("Titrisation (FCTC)", "Securitisation (FCTC)"),
+    "GSS": ("Vertes, sociales, durables (GSS)", "Green, social, sustainability (GSS)"),
+    "CONV": ("Convertibles en actions", "Convertible"), "SUKUK": ("Sukuk", "Sukuk"),
+}
 FUND_CATEGORIES = {
     "A": ("Actions", "Equity"), "D": ("Diversifié", "Diversified"),
     "OMLT": ("Obligataire moyen/long terme", "Medium/long-term bond"), "OCT": ("Obligataire court terme", "Short-term bond"),
     "OATC": ("Obligataire court terme (OATC)", "Short-term bond (OATC)"), "M": ("Monétaire", "Money market"),
-    "C": ("Contractuel", "Contractual"),
+    "C": ("Contractuel", "Contractual"), "O": ("Obligataire", "Bond"), "R": ("Capital risque", "Venture capital"),
 }
 COUNTRIES = {"CI": ("Côte d'Ivoire", "Côte d'Ivoire"), "SN": ("Sénégal", "Senegal"), "BF": ("Burkina Faso", "Burkina Faso"),
              "BJ": ("Bénin", "Benin"), "ML": ("Mali", "Mali"), "NE": ("Niger", "Niger"), "TG": ("Togo", "Togo"),
