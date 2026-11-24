@@ -185,6 +185,31 @@ def stats_on(v: str, day: str) -> dict:
 
 
 @st.cache_data(show_spinner=False)
+def equity_value_history(v: str) -> pd.Series:
+    """Value traded on equities per session, summed from the quotes (also available for 2016-2017,
+    whose bulletins have no market statistics; equal to BRVM's figure when both exist)."""
+    return query("SELECT date, SUM(value) AS value FROM equity_quotes GROUP BY date ORDER BY date").set_index("date")["value"]
+
+
+def equity_value(v: str, day: str) -> float | None:
+    s = stats_on(v, day).get("equity_value")
+    if s is not None:
+        return s
+    h = equity_value_history(v)
+    return h.get(pd.Timestamp(day))
+
+
+def breadth(v: str, day: str) -> tuple[int, int, int]:
+    """(rising, falling, unchanged) stocks: BRVM's statistics, or counted from the quotes when the
+    bulletin has none (2016-2017)."""
+    s = stats_on(v, day)
+    if any(s.get(f"equity_nb_{k}") is not None for k in ("up", "down", "unchanged")):
+        return tuple(int(s.get(f"equity_nb_{k}") or 0) for k in ("up", "down", "unchanged"))  # blank = 0
+    ch = equities_on(v, day)["change_pct"].dropna()
+    return int((ch > 0).sum()), int((ch < 0).sum()), int((ch == 0).sum())
+
+
+@st.cache_data(show_spinner=False)
 def stats_history(v: str, keys: tuple[str, ...]) -> pd.DataFrame:
     marks = ",".join("?" * len(keys))
     df = query(f"SELECT date, key, value FROM market_stats WHERE key IN ({marks})", keys)

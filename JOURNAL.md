@@ -115,3 +115,22 @@ From 2026-11-24, everything is documented in the project, including plans, propo
   * 33 tests pass. The new test covers the suffixed link of 2026-11-23, the broken links of 2018-12-06, and Christmas 2025.
   * The page renders in FR and EN on the full and the slim database.
 * **Waiting for the user:** the review of step 1 in the browser.
+
+## 2026-11-24: step 2 built, daily briefing
+
+* **Request:** step 2 (user: "step 2").
+* **Built:** the module `webapp/app_lib/briefing.py`, shown on the Market overview for any chosen session:
+  * **the written summary**, FR/EN, from text templates;
+  * **Highlights**: 52-week highs and lows, moves close to the limit, unusual trading, splits, new notices;
+  * **Upcoming**: meetings, plus the dividend payments, splits and first listings parsed from the operation notices.
+* **Choices made while building:**
+  * **"Close to the limit" means 7 % or more**, not exactly 7.5 %: prices move in ticks, so a stock at the limit shows e.g. −7.33 %.
+  * **The thresholds were measured on 2026:** 5× the 3-month value gives about one event per session.
+  * **Notices repeated with a garbled company name** (font decoding) are merged with the readable one.
+  * **Splits announced in notices** get their own label.
+* **Fix found on the way:** the 2016–2017 bulletins have no market statistics, so the overview showed 0 / 0 / 0 stocks rising/falling and no value traded. These are now computed from the quotes, which give the same values as BRVM's own figures where both exist.
+* **Checks:**
+  * 35 tests pass. The new ones cover notice parsing, the summary of 2026-10-20, ONATEL's 52-week high, SONATEL's unusual volume, the upcoming dividend and split, and the 2017 fallback.
+  * The overview renders on the slim database in both languages.
+* **Rules documented** in [WEBAPP.md → Daily briefing rules](WEBAPP.md#daily-briefing-rules).
+* **Waiting for the user:** the review of step 2 in the browser.

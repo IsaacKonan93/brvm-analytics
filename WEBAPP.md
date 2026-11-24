@@ -11,10 +11,11 @@ A public website for analysing the BRVM data in `brvm.db`. It is built with [Str
 1. [Run it locally](#run-it-locally)
 2. [Pages](#pages)
 3. [How it works](#how-it-works)
-4. [Put it online (Streamlit Community Cloud)](#put-it-online-streamlit-community-cloud)
-5. [Daily data updates online](#daily-data-updates-online)
-6. [Changing the app](#changing-the-app)
-7. [Tests](#tests)
+4. [Daily briefing rules](#daily-briefing-rules)
+5. [Put it online (Streamlit Community Cloud)](#put-it-online-streamlit-community-cloud)
+6. [Daily data updates online](#daily-data-updates-online)
+7. [Changing the app](#changing-the-app)
+8. [Tests](#tests)
 
 ## Run it locally
 
@@ -40,7 +41,7 @@ The language switch (Français / English) is in the sidebar. Wherever a session 
 
 | Page | What it shows |
 |---|---|
-| **Market overview** | Session picker (default: last session). Headline indices (BRVM Composite, BRVM 30, BRVM Prestige; BRVM 10 before 2023) with day and year-to-date change. Equity and bond market cap, value traded, rising / falling / unchanged. Composite history with range buttons (1M → All). Top gainers and losers. Most traded stocks. Sector indices since 1 January. Market cap of equities vs bonds over time. Value traded per month with its 12-month average. |
+| **Market overview** | Session picker (default: last session). **Daily briefing:** a written summary of the session in French or English; *Highlights* (52-week highs and lows, moves close to the ±7.5 % limit, unusual trading, splits, new notices); *Upcoming* (general meetings, dividend payments, splits and first listings announced in the bulletins), each with the 📄 bulletin announcing it. Rules: [Daily briefing rules](#daily-briefing-rules). Headline indices (BRVM Composite, BRVM 30, BRVM Prestige; BRVM 10 before 2023) with day and year-to-date change. Equity and bond market cap, value traded, rising / falling / unchanged. Composite history with range buttons (1M → All). Top gainers and losers. Most traded stocks. Sector indices since 1 January. Market cap of equities vs bonds over time. Value traded per month with its 12-month average. |
 | **Stock explorer** | Stock picker; `?symbol=SNTS` in the URL opens that stock directly. KPIs: last adjusted price and day change, YTD, 1-year return, P/E, net yield, last dividend. Split-adjusted price with a volume panel below. Dividends per year (adjusted). Splits, with the BRVM notice as evidence. Latest order book (best bid/ask, spread). Notices and shareholder meetings of the company. |
 | **Compare & screen** | *Compare:* up to 8 stocks over YTD / 1Y / 3Y / 5Y / All, rebased to 100. Return, annualised volatility and maximum drawdown. Correlation heatmap of daily returns. *Screener:* every listed stock on the last session, with filters on sector, compartment, country, P/E range, minimum yield and minimum average daily value traded over 3 months. Sortable, CSV export. |
 | **Bonds** | Every listed bond on the last session, with filters on issuer, category and maturity: coupon, maturity, nominal, price, accrued coupon, next coupon, amortisation. Coupon vs maturity chart, colored by issuer when 3 or fewer issuers are selected. History of one bond (price, accrued coupon). Value traded per year, equities vs bonds. |
@@ -63,6 +64,7 @@ brvm.db (this PC, updated by daily_update.py)
 | [webapp/streamlit_app.py](webapp/streamlit_app.py) | Entry point: language switch, navigation, "data as of" date, footer |
 | [webapp/views/](webapp/views/) | One module per page (`overview.py`, `stock.py`, `compare.py`, `bonds.py`, `funds.py`, `bulletins.py`), each with a `render()` function. `common.py` has the table, CSV and chart helpers |
 | [webapp/app_lib/data.py](webapp/app_lib/data.py) | Every database query. The database is opened **read-only**. Queries are cached and keyed on the latest bulletin date, so a new bulletin refreshes everything |
+| [webapp/app_lib/briefing.py](webapp/app_lib/briefing.py) | The daily briefing: notable events of a session, upcoming events read from the notices, the written summary (text templates, no AI) |
 | [webapp/app_lib/i18n.py](webapp/app_lib/i18n.py) | French/English labels (`LABELS`), sector / country / fund-category names, number formats (FR `1 234,56`, EN `1,234.56`; amounts `13 277 Mds` / `13.28 tn`) |
 | [webapp/app_lib/charts.py](webapp/app_lib/charts.py) | Plotly charts with the project's validated palette: fixed series order, one y-axis per chart (price and volume are two stacked panels), diverging blue↔red with a gray midpoint |
 | [.streamlit/config.toml](.streamlit/config.toml) | Theme (primary color `#2a78d6`; light/dark follows the visitor's setting) |
@@ -81,6 +83,24 @@ brvm.db (this PC, updated by daily_update.py)
 * duplicate fund NAVs.
 
 Its integrity is checked before upload.
+
+## Daily briefing rules
+
+The Market overview computes the briefing for the chosen session, so any past session can be replayed. The rules are in [webapp/app_lib/briefing.py](webapp/app_lib/briefing.py):
+
+| Item | Rule |
+|---|---|
+| Written summary | Composite (and BRVM 30) change and level, year-to-date change, rising / falling / unchanged, equity value traded against its average of the previous 63 sessions (about 3 months), the share of the most traded stock when it is 25 % or more, the top gainer and loser. |
+| 52-week high / low | Split-adjusted reference price above the highest (below the lowest) of the previous 365 days, for stocks listed for at least a year. |
+| Close to the daily limit | Change of 7 % or more either way. The BRVM limit is ±7.5 %, but prices move in ticks, so a stock at the limit often shows −7.33 % or +7.41 %. |
+| Unusual trading | Value traded at least 5 times its average of the previous 63 sessions. |
+| Splits | Corporate actions (see [EXTRACTION.md](EXTRACTION.md#splits-and-adjusted-prices-corporate_actions-price_anomalies-adjustment_factors-view-equity_quotes_adjusted)) taking effect that day. |
+| New notices | Notices of the day's bulletin that were not in the previous bulletin. |
+| Upcoming | General meetings dated after the session and already announced. Operation notices of the last 15 bulletins whose text gives a future date ("le 27/10/2026", "le 1er décembre 2026"): dividend payments, splits, first listings. Other operations are shown with their original French text. |
+
+**Calibration on 2026:** about 1 unusual-trading event and 1 limit move per session, and 3 to 4 new 52-week highs on average during that rising year.
+
+**2016–2017 bulletins** have no market statistics. The rising/falling counts and the value traded are then computed from the quotes, which give the same values as BRVM's figures where both exist.
 
 ## Put it online (Streamlit Community Cloud)
 

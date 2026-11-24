@@ -38,7 +38,7 @@ For each page, the user reviews it in the browser and says what to keep, change,
 
 | Page | Review status |
 |---|---|
-| Market overview | **Accepted as is** (2026-11-23). It becomes the session summary of the daily briefing, and new blocks are added to it (see [Features](#features)). |
+| Market overview | **Accepted as is** (2026-11-23). It is now the daily briefing: the written summary, Highlights and Upcoming were added on 2026-11-24 (step 2), waiting for the user's review. |
 | Stock explorer | Presented on 2026-11-23. The features decided on 2026-11-24 change it substantially, so it will be reviewed **once rebuilt**. |
 | Compare & screen | Not reviewed; the performance table and simulator are added to it |
 | Bonds | Not reviewed |
@@ -48,6 +48,7 @@ For each page, the user reviews it in the browser and says what to keep, change,
 * **2026-11-23:** the review was paused while the user thought about the app as a whole.
 * **2026-11-24:** the open questions were answered (see [Decisions](#decisions)). The next step is to build the decided features.
 * **2026-11-24:** step 1, the BOC links, is built and tested. It is waiting for the user's review in the browser.
+* **2026-11-24:** step 2, the daily briefing, is built and tested. It is waiting for the user's review in the browser.
 * **Deployment online is on hold** until the user says the rebuild is finished. Until then, nothing is pushed to GitHub or published. The deployment steps stay in [WEBAPP.md → Put it online](WEBAPP.md#put-it-online-streamlit-community-cloud).
 
 ## Decisions
@@ -87,9 +88,9 @@ Technical notes, checked on 2026-11-24:
 | Feature | Detail | Status |
 |---|---|---|
 | **Session summary** | Indices, market cap, value traded, rising/falling stocks, top gainers and losers, most traded. This is the current Market overview, which was accepted. | done (v1) |
-| **Written summary FR/EN** | Generated from the figures with text templates, not AI. Example: *"The Composite fell 0.21% to 492.89. 19 stocks up, 19 down. Most traded: SONATEL…"* | decided |
-| **Notable events of the day** | New 52-week highs and lows; stocks at the ±7.5% daily limit; unusual volume (5× the 3-month average); new BRVM notices; splits. | decided |
-| **Upcoming events** | General meetings and dividend payment dates, taken from the bulletins. | decided |
+| **Written summary FR/EN** | Generated from the figures with text templates, not AI. Example from 2026-11-23: *"The BRVM Composite fell 3.32 % to 476.54 points (BRVM 30: −3.30 %). Year to date: +37.83 %. 1 stock up, 40 down, 5 unchanged. Equity value traded: 1.43 bn FCFA, 51 % below its 3-month average…"* | built, to review |
+| **Notable events of the day** | New 52-week highs and lows; stocks at the ±7.5% daily limit; unusual volume (5× the 3-month average); new BRVM notices; splits. The "limit" rule is a move of 7 % or more, because of price ticks. The rules are in [WEBAPP.md → Daily briefing rules](WEBAPP.md#daily-briefing-rules). | built, to review |
+| **Upcoming events** | General meetings, plus the dividend payments, splits and first listings announced in the bulletins' operation notices with a future date. Each comes with the 📄 bulletin announcing it. | built, to review |
 | **Weekly and monthly recap** | The same blocks over a week or a month. | proposed (after v1) |
 
 ### 3. Analysis

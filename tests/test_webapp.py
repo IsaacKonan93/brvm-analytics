@@ -53,6 +53,37 @@ def test_bulletin_links():
     assert data.boc_url(v, "2025-12-25") is None
 
 
+def test_briefing_parsing():
+    import datetime as dt
+    import streamlit as st
+    from app_lib import briefing
+    st.session_state.lang = "fr"
+    assert briefing.event_date("Paiement de dividendes de 92 F CFA net par action, le 27/10/2026") == dt.date(2026, 10, 27)
+    assert briefing.event_date("SOCIAL BOND AFINHAB 6,00 % 2026-2041 - Première cotation le 1er décembre 2026") == dt.date(2026, 12, 1)
+    assert briefing.event_date("Avis sans date") is None
+    assert briefing.describe_operation("Paiement de dividendes de 92 F CFA net par action, le 27/10/2026") ==         ("dividend", "Paiement de dividende : 92 FCFA net par action")
+    assert briefing.describe_operation("Fractionnement des actions à raison de dix (10) actions nouvelles pour une (1) "
+                                       "action ancienne le 26/10/2026")[0] == "split"
+    st.session_state.lang = "en"
+    assert briefing.describe_operation("Première cotation - TPCI 6 % 2026-2031 (TPCI.O1) - Première cotation le 2 mars 2026") ==         ("listing", "First listing: TPCI 6 % 2026-2031 (TPCI.O1)")
+
+
+def test_briefing_values():
+    import streamlit as st
+    from app_lib import briefing, data
+    v = data.as_of()
+    st.session_state.lang = "fr"
+    text = briefing.summary(v, "2026-10-20")
+    assert "a reculé de 0,94 % à 524,52 points" in text and "SONATEL SN en représente 77 %" in text
+    ev = briefing.notable(v, "2026-10-20")
+    assert "ONATEL BF" in set(ev["highs"]["name"]) and "SONATEL SN" in set(ev["volume"]["name"])
+    up = briefing.upcoming(v, "2026-10-20")
+    assert {("TRACTAFRIC CI", "dividend"), ("SONATEL", "split")} <= set(zip(up["company"], up["kind"]))
+    assert not up["company"].str.contains(r"[$%]").any()
+    assert data.breadth(v, "2017-02-08") == (13, 13, 7)               # no statistics in 2017 bulletins: counted
+    assert data.equity_value(v, "2026-11-23") == 1434490920
+
+
 @pytest.mark.parametrize("page", ["overview", "stock", "compare", "bonds", "funds", "bulletins"])
 @pytest.mark.parametrize("lang", ["fr", "en"])
 def test_pages_render(page, lang):
