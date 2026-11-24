@@ -134,3 +134,13 @@ From 2026-11-24, everything is documented in the project, including plans, propo
   * The overview renders on the slim database in both languages.
 * **Rules documented** in [WEBAPP.md → Daily briefing rules](WEBAPP.md#daily-briefing-rules).
 * **Waiting for the user:** the review of step 2 in the browser.
+
+## 2026-11-24: navigation bar in Indigo dye
+
+* **Request:** change the theme of the navigation bar to Indigo dye, before continuing the rebuild.
+* **Done** in `.streamlit/config.toml`, section `[theme.sidebar]`:
+  * background Indigo dye `#00416A` with white text (contrast about 10.7:1), the same in light and dark mode;
+  * `#0A5A8C` for widgets and the selected page;
+  * light-blue accents and links (`#8CC8F2`, `#A9D8FF`) so the language switch and the 📄 BOC link stay readable.
+* The rest of the app keeps its theme. The charts keep the validated palette.
+* **Waiting for the user:** a check of the colours in the browser, then step 3 (total return).

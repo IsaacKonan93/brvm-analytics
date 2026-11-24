@@ -67,7 +67,7 @@ brvm.db (this PC, updated by daily_update.py)
 | [webapp/app_lib/briefing.py](webapp/app_lib/briefing.py) | The daily briefing: notable events of a session, upcoming events read from the notices, the written summary (text templates, no AI) |
 | [webapp/app_lib/i18n.py](webapp/app_lib/i18n.py) | French/English labels (`LABELS`), sector / country / fund-category names, number formats (FR `1 234,56`, EN `1,234.56`; amounts `13 277 Mds` / `13.28 tn`) |
 | [webapp/app_lib/charts.py](webapp/app_lib/charts.py) | Plotly charts with the project's validated palette: fixed series order, one y-axis per chart (price and volume are two stacked panels), diverging blue↔red with a gray midpoint |
-| [.streamlit/config.toml](.streamlit/config.toml) | Theme (primary color `#2a78d6`; light/dark follows the visitor's setting) |
+| [.streamlit/config.toml](.streamlit/config.toml) | Theme. Primary color `#2a78d6`; light/dark follows the visitor's setting. The navigation bar (sidebar) is **Indigo dye `#00416A`** with white text in both modes, a lighter indigo `#0A5A8C` for widgets and the selected page, and light-blue accents and links (`#8CC8F2`, `#A9D8FF`) |
 | [webapp/requirements.txt](webapp/requirements.txt) | Packages installed by Streamlit Cloud |
 | [publish_app_data.py](publish_app_data.py) | Builds and uploads the slim database |
 

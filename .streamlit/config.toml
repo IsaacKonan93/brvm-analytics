@@ -2,6 +2,16 @@
 primaryColor = "#2a78d6"
 font = "sans serif"
 
+# Navigation bar (sidebar): Indigo dye #00416A, chosen by the user on 2026-11-24 (see WEBAPP.md).
+# Same in light and dark mode; white text on #00416A has a contrast ratio of about 10.7:1.
+[theme.sidebar]
+backgroundColor = "#00416A"            # Indigo dye
+secondaryBackgroundColor = "#0A5A8C"   # widgets and the selected page: a lighter indigo
+textColor = "#FFFFFF"
+primaryColor = "#8CC8F2"               # selected language and focus: light blue, readable on indigo
+linkColor = "#A9D8FF"                  # "📄 BOC" link under "Data as of"
+borderColor = "#1C6A9C"
+
 [server]
 headless = true
 
