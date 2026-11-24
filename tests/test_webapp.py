@@ -84,6 +84,53 @@ def test_briefing_values():
     assert data.equity_value(v, "2026-11-23") == 1434490920
 
 
+def test_total_return_index():
+    import pandas as pd
+    from app_lib.data import total_return_index
+    idx = pd.to_datetime(["2025-05-16", "2025-05-19", "2025-05-20"])
+    price = pd.Series([100.0, 95.0, 99.75], index=idx)          # ex-dividend on the 19th: -5 = the dividend
+    divs = pd.Series([5.0], index=pd.to_datetime(["2025-05-19"]))
+    tr = total_return_index(price, divs)
+    assert list(tr.round(6)) == [100.0, 100.0, 105.0]           # flat on the ex-day, then +5 % on 100
+    assert total_return_index(price, divs.iloc[:0]).equals(price)
+
+
+def test_dividend_events_and_total_return():
+    from app_lib import data
+    v = data.as_of()
+    ev = data.dividend_events(v)
+    snts = ev[ev["symbol"] == "SNTS"].set_index("div_date")
+    assert snts.loc["2025-05-22", "ex_date"].strftime("%Y-%m-%d") == "2025-05-19"   # flagged "(d)" session
+    assert snts.loc["2025-05-22", "adj_div_amount"] == 165.5                       # 1 655 printed, 1:10 split
+    assert len(ev) >= 320
+    h = data.stock_history(v, "SNTS")
+    assert abs(h.loc["2025-05-19", "tr_price"] / h.loc["2025-05-16", "tr_price"] - 1) < 1e-9  # dividend offsets the drop
+    a, b = h.loc["2016-08-01"], h.iloc[-1]
+    price_ret, total_ret = b["adj_ref_price"] / a["adj_ref_price"], b["tr_price"] / a["tr_price"]
+    assert total_ret > price_ret * 1.8                          # ten years of ~8 % yields
+    m = data.price_matrix(v, ("SNTS", "ORAC"), "2025-11-21", "tr")
+    assert m.index.min().strftime("%Y-%m-%d") >= "2025-11-21" and m.notna().all().all()
+
+
+@pytest.mark.parametrize("page", ["stock", "compare"])
+def test_pages_render_price_basis(page):
+    from streamlit.testing.v1 import AppTest
+
+    def script(page, paths):
+        import importlib
+        import sys
+        sys.path[:0] = paths
+        import streamlit as st
+        st.session_state.lang = "en"
+        st.session_state.basis = "price"
+        importlib.import_module(f"views.{page}").render()
+
+    at = AppTest.from_function(script, args=(page, [str(ROOT / "webapp"), str(ROOT)]), default_timeout=180)
+    at.run()
+    assert not at.exception, [e.value for e in at.exception]
+    assert any("Price-only" in c.value for c in at.caption)
+
+
 @pytest.mark.parametrize("page", ["overview", "stock", "compare", "bonds", "funds", "bulletins"])
 @pytest.mark.parametrize("lang", ["fr", "en"])
 def test_pages_render(page, lang):

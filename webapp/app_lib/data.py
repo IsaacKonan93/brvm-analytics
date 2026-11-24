@@ -247,11 +247,63 @@ def monthly_value(v: str) -> pd.Series:
 
 # ---------------------------------------------------------------- stocks
 
+# ---------------------------------------------------------------- total return (WEBAPP_ROADMAP.md, step 3)
+
+BASES = ("tr", "price")  # performance basis: total return (default) or price only
+
+
+def basis() -> str:
+    """Performance basis chosen in the sidebar: 'tr' (net dividends reinvested, default) or 'price'."""
+    b = st.session_state.get("basis", "tr")
+    return b if b in BASES else "tr"
+
+
+@st.cache_data(show_spinner=False)
+def dividend_events(v: str) -> pd.DataFrame:
+    """Ex-dividend sessions and split-adjusted net dividends (table dividend_events, EXTRACTION.md)."""
+    try:
+        return query("SELECT symbol, ex_date, div_date, adj_div_amount FROM dividend_events ORDER BY symbol, ex_date",
+                     dates=("ex_date", "div_date"))
+    except Exception:  # database built before the table existed
+        return pd.DataFrame({"symbol": [], "ex_date": pd.Series(dtype="datetime64[ns]"),
+                             "div_date": pd.Series(dtype="datetime64[ns]"), "adj_div_amount": []})
+
+
+def total_return_index(price: pd.Series, divs: pd.Series) -> pd.Series:
+    """Price with the net dividends reinvested on their ex-dividend sessions, on the scale of the price
+    (equal to it on the first session).
+
+    price: split-adjusted reference price by date (gaps and misprinted sessions are carried forward);
+    divs: split-adjusted net dividend per share, indexed by ex-dividend date.
+    Each session: TR_t = TR_t-1 x (P_t + D_t) / P_t-1, with D_t the dividend going ex that day.
+    """
+    p = price.ffill().dropna()
+    if p.empty:
+        return p
+    d = divs.groupby(level=0).sum().reindex(p.index, fill_value=0.0)
+    ratio = (p + d) / p.shift()
+    ratio.iloc[0] = 1.0
+    return p.iloc[0] * ratio.cumprod()
+
+
+def _divs_of(v: str, symbol: str) -> pd.Series:
+    ev = dividend_events(v)
+    return ev.loc[ev["symbol"] == symbol].set_index("ex_date")["adj_div_amount"]
+
+
 @st.cache_data(show_spinner=False)
 def stock_history(v: str, symbol: str) -> pd.DataFrame:
-    return query("""SELECT date, adj_ref_price, adj_close, adj_volume, value, change_pct, ytd_pct, per, net_yield,
-                           ref_price, adj_factor, price_anomaly
-                    FROM equity_quotes_adjusted WHERE symbol = ? ORDER BY date""", (symbol,)).set_index("date")
+    """Daily history of one stock (adjusted view) plus `tr_price`: the price with dividends reinvested."""
+    h = query("""SELECT date, adj_ref_price, adj_close, adj_volume, value, change_pct, ytd_pct, per, net_yield,
+                        ref_price, adj_factor, price_anomaly
+                 FROM equity_quotes_adjusted WHERE symbol = ? ORDER BY date""", (symbol,)).set_index("date")
+    h["tr_price"] = total_return_index(h["adj_ref_price"], _divs_of(v, symbol)).reindex(h.index)
+    return h
+
+
+def perf_column() -> str:
+    """Column of stock_history() that follows the chosen performance basis."""
+    return "tr_price" if basis() == "tr" else "adj_ref_price"
 
 
 @st.cache_data(show_spinner=False)
@@ -312,6 +364,19 @@ def adjusted_matrix(v: str, symbols: tuple[str, ...], start: str | None) -> pd.D
         params.append(start)
     df = query(q, params)
     return df.pivot(index="date", columns="symbol", values="adj_ref_price").sort_index()
+
+
+@st.cache_data(show_spinner=False)
+def price_matrix(v: str, symbols: tuple[str, ...], start: str | None, basis: str = "price") -> pd.DataFrame:
+    """Adjusted prices (basis 'price') or prices with dividends reinvested (basis 'tr'), one column per
+    symbol, from `start`. Total return is computed on the full history, then cut, so the first session
+    of the period is not missing its dividend."""
+    full = adjusted_matrix(v, symbols, None if basis == "tr" else start)
+    if basis == "tr":
+        full = pd.DataFrame({s: total_return_index(full[s], _divs_of(v, s)) for s in full.columns}).reindex(full.index)
+        if start:
+            full = full[full.index >= pd.Timestamp(start)]
+    return full
 
 
 @st.cache_data(show_spinner=False)

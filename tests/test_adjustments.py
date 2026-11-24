@@ -56,3 +56,26 @@ def test_database_adjusted_view():
     # misprinted session: no adjusted price
     assert con.execute("""SELECT price_anomaly, adj_ref_price FROM equity_quotes_adjusted
                           WHERE symbol = 'STBC' AND date = '2018-07-12'""").fetchone() == (1, None)
+
+
+def test_dividend_detection_rules():
+    from brvm_extract.dividends import detect
+    # (date, adj_ref_price, adj_prev_close, div_amount, adj_div_amount, div_date, status_flag)
+    rows = [
+        ("2024-05-02", 1000, 1000, 50, 50, "2023-05-10", None),
+        ("2024-05-03", 960, 1000, 60, 60, "2024-05-07", "EX-DIV"),       # 1. flagged ex-dividend session
+        ("2024-05-06", 970, 960, 60, 60, "2024-05-07", None),
+        ("2024-05-07", 975, 970, 3, 3, "2024-05-07", None),               # restated after a split: ignored
+        ("2024-05-08", 980, 975, 3, 3, "2024-05-07", None),
+        ("2024-05-09", 985, 980, 3, 3, "2025-05-09", None),               # misprinted date, seen once: ignored
+        ("2024-05-10", 990, 985, 3, 3, "2024-05-07", None),
+        ("2025-05-05", 1100, 1100, 3, 3, "2024-05-07", None),
+        ("2025-05-06", 1030, 1100, 3, 3, "2024-05-07", None),             # 2. drop of 70 ~ the 72 dividend
+        ("2025-05-07", 1040, 1030, 3, 3, "2024-05-07", None),
+        ("2025-05-20", 1050, 1040, 72, 72, "2025-05-12", None),           # shown only after the payment
+        ("2025-05-21", 1050, 1050, 72, 72, "2025-05-12", None),
+        ("2025-05-22", 1050, 1050, 72, 72, "2025-05-12", None),
+    ]
+    ev = detect(rows)
+    assert [(e["ex_date"], e["div_date"], e["div_amount"], e["method"]) for e in ev] == [
+        ("2024-05-03", "2024-05-07", 60, "flag"), ("2025-05-06", "2025-05-12", 72, "price_drop")]

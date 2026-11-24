@@ -18,6 +18,15 @@ def _return(series: pd.Series, days: int) -> float | None:
     return (s.iloc[-1] / past.iloc[-1] - 1) * 100 if len(past) else None
 
 
+def _ytd(series: pd.Series) -> float | None:
+    """Change since the last session of the previous year."""
+    s = series.dropna()
+    if s.empty:
+        return None
+    before = s[s.index.year < s.index[-1].year]
+    return (s.iloc[-1] / before.iloc[-1] - 1) * 100 if len(before) else None
+
+
 def render():
     v = data.as_of()
     st.title(t("page_stock"))
@@ -41,14 +50,18 @@ def render():
                                          f"{t('session')} : {fmt_date(h.index[-1])}", boc_md(h.index[-1])])))
     k = st.columns(6)
     k[0].metric(t("last_price"), fmt_num(last["adj_ref_price"]), fmt_pct(last["change_pct"]), border=True)
-    k[1].metric(t("ytd_pct"), fmt_pct(last["ytd_pct"]), border=True)
-    k[2].metric(t("return_1y"), fmt_pct(_return(h["adj_ref_price"], 365)), border=True)
+    perf = h[data.perf_column()]
+    tr = data.basis() == "tr"
+    k[1].metric(t("ytd_tr" if tr else "ytd_pct"), fmt_pct(_ytd(perf) if tr else last["ytd_pct"]), border=True)
+    k[2].metric(t("return_1y_tr" if tr else "return_1y"), fmt_pct(_return(perf, 365)), border=True)
     k[3].metric(t("per"), fmt_num(last["per"], 2), border=True)
     k[4].metric(t("yield"), fmt_pct(last["net_yield"], 2, signed=False), border=True)
     k[5].metric(t("last_div"), fmt_num(divs["div"].iloc[-1], 2) if len(divs) else "—",
                 fmt_date(divs["div_date"].iloc[-1]) if len(divs) else None, delta_color="off", border=True)
 
-    chart(charts.price_volume(h["adj_ref_price"], h["adj_volume"], t("adj_price"), t("volume_adj")))
+    prices = {t("tr_price"): h["tr_price"], t("adj_price"): h["adj_ref_price"]} if tr else h["adj_ref_price"]
+    chart(charts.price_volume(prices, h["adj_volume"], t("adj_price"), t("volume_adj")))
+    st.caption(t("basis_note_tr" if tr else "basis_note_price"))
 
     left, right = st.columns(2)
     with left:

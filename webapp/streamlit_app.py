@@ -25,9 +25,16 @@ if "lang" not in st.session_state:
     q = st.query_params.get("lang")
     st.session_state.lang = q if q in LANGS else "fr"
 
+# performance basis: ?basis=tr|price in the URL, total return by default (WEBAPP_ROADMAP.md, decisions)
+if "basis" not in st.session_state:
+    q = st.query_params.get("basis")
+    st.session_state.basis = q if q in data.BASES else "tr"
+
 with st.sidebar:
     st.radio(t("language"), list(LANGS), format_func=LANGS.get, horizontal=True, key="lang")
+    st.radio(t("basis"), list(data.BASES), format_func=lambda b: t(f"basis_{b}"), key="basis", help=t("basis_help"))
 st.query_params["lang"] = st.session_state.lang
+st.query_params["basis"] = st.session_state.basis
 
 pages = [
     st.Page(overview.render, title=t("page_overview"), icon=":material/monitoring:", url_path="overview", default=True),

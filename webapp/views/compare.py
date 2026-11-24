@@ -40,7 +40,7 @@ def _compare(v: str):
     if not syms:
         st.info(t("no_data"))
         return
-    px = data.adjusted_matrix(v, tuple(syms), _start(v, per)).ffill()
+    px = data.price_matrix(v, tuple(syms), _start(v, per), data.basis()).ffill()
     px = px.dropna(how="all")
     if px.empty:
         st.info(t("no_data"))
@@ -48,6 +48,7 @@ def _compare(v: str):
     rebased = px / px.bfill().iloc[0] * 100
     chart(charts.lines({names[s]: rebased[s] for s in syms if s in rebased}, t("rebased"), height=440,
                        hover_fmt=",.1f"))
+    st.caption(t("basis_note_tr" if data.basis() == "tr" else "basis_note_price"))
 
     rets = px.pct_change(fill_method=None)
     rows = []

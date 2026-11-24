@@ -49,6 +49,8 @@ For each page, the user reviews it in the browser and says what to keep, change,
 * **2026-11-24:** the open questions were answered (see [Decisions](#decisions)). The next step is to build the decided features.
 * **2026-11-24:** step 1, the BOC links, is built and tested. It is waiting for the user's review in the browser.
 * **2026-11-24:** step 2, the daily briefing, is built and tested. It is waiting for the user's review in the browser.
+* **2026-11-24:** the navigation bar is now Indigo dye `#00416A` (user's request).
+* **2026-11-24:** step 3, total return, is built and tested. It is waiting for the user's review in the browser.
 * **Deployment online is on hold** until the user says the rebuild is finished. Until then, nothing is pushed to GitHub or published. The deployment steps stay in [WEBAPP.md → Put it online](WEBAPP.md#put-it-online-streamlit-community-cloud).
 
 ## Decisions
@@ -97,7 +99,7 @@ Technical notes, checked on 2026-11-24:
 
 | Feature | Detail | Status |
 |---|---|---|
-| **Total return** | Performance with dividends reinvested, **shown by default** everywhere returns appear, with a switch to price only. BRVM stocks often yield 6–10%, so price-only charts understate returns. Computed from the split-adjusted prices and dividends already in the database (`equity_quotes_adjusted`). | decided |
+| **Total return** | Performance with dividends reinvested, **shown by default** everywhere returns appear, with a switch to price only. BRVM stocks often yield 6–10%, so price-only charts understate returns. Built on 2026-11-24. The new table `dividend_events` places each dividend on its ex-dividend session, and the app reinvests it there. A **Performance** switch in the sidebar (*Dividends reinvested* / *Price only*) drives the stock page and the comparison. See [EXTRACTION.md → Dividends and total return](EXTRACTION.md#dividends-and-total-return-dividend_events--pk-symbol-div_date). | built, to review |
 | **Dividends** | Calendar and history per stock: amount, growth, yield. | decided |
 | **Liquidity** | Average daily value traded, share of sessions with trades, bid-ask spread. Many BRVM stocks rarely trade. | decided |
 | **Valuation over time** | History of a stock's P/E and yield, compared with its sector. | decided |

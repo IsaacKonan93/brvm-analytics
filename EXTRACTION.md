@@ -84,6 +84,7 @@ The "plus fortes hausses / baisses" (top movers) block is **not** stored, becaus
 | [brvm_extract/pipeline.py](brvm_extract/pipeline.py) | Runs all sections on one PDF, reconstructs clipped values, runs the checksums |
 | [brvm_extract/db.py](brvm_extract/db.py) | SQLite schema, writes, `securities` rebuild |
 | [brvm_extract/adjustments.py](brvm_extract/adjustments.py) | Splits and adjusted prices: `corporate_actions`, `price_anomalies`, `adjustment_factors`, view `equity_quotes_adjusted` |
+| [brvm_extract/dividends.py](brvm_extract/dividends.py) | Ex-dividend sessions for total return: `dividend_events` |
 | [data/corporate_actions_manual.csv](data/corporate_actions_manual.csv) | Manual corrections of split ratios (tracked in git) |
 | [brvm_extract/qc.py](brvm_extract/qc.py) | Quality report `qc_report.md` |
 | [tests/](tests/) | `test_values.py` (parsing rules) and `test_golden.py` (real values from one bulletin per era) |
@@ -188,6 +189,33 @@ Bulletin prices are printed as traded, never adjusted. After each extraction, `b
   symbol,date,action,ratio,note
   SAFC,2017-10-17,set,0.5,1:2 split according to the 2017 annual report
   ```
+
+### Dividends and total return: `dividend_events` — PK (symbol, div_date)
+
+Built after each run by [brvm_extract/dividends.py](brvm_extract/dividends.py), after the split adjustments. It gives the session on which each dividend went ex, so that returns can include dividends (total return).
+
+| Column | Meaning |
+|---|---|
+| `ex_date` | Ex-dividend session: the dividend is added back to the return on this day |
+| `div_date` | Payment date printed in the bulletin |
+| `div_amount` | Net dividend per share, as first printed for this payment |
+| `adj_div_amount` | The same on today's share basis (split-adjusted) |
+| `method` | How `ex_date` was found, see below |
+
+**What the bulletins show.** For each stock, the last net dividend and its payment date. The ex-dividend session is flagged "(d)" next to the name (`status_flag` EX-DIV). On that session the new dividend appears, and BRVM lowers the reference price by about the dividend. Example: SONATEL on 2025-05-19 went from 26 600 to 24 945, a drop of 1 655, which is exactly the dividend paid on 2025-05-22.
+
+**Rules,** one event per stock and payment date:
+* **Amount:** the amount first printed for that payment date. Bulletins sometimes restate it after a split (BOAB: 8 941, then 447.05 for the same payment). Later restatements are ignored.
+* **Ex-dividend session,** searched in the 25 days up to the payment date, in this order:
+  1. `flag`: the session flagged EX-DIV;
+  2. `price_drop`: the session where the drop of the reference price below the previous close is closest to the dividend (0.5 to 1.5 times it). The 2016–2017 bulletins often filled the dividend column only after the payment;
+  3. `first_seen`: the session where the new dividend first appears;
+  4. `largest_drop`: the session with the largest drop.
+* **Misprints:** a payment date printed in fewer than 3 sessions, then replaced, is ignored.
+
+**Result (2026-11-24):** 325 events. 278 come from the flag, 39 from the price drop, 7 from the first appearance and 1 from the largest drop. Three real dividends (2016–2018 and 2024) could not be placed, because no price drop appears before their payment. On flagged sessions, the median drop equals the dividend (ratio 1.00).
+
+**Total return** is computed by the web app (`total_return_index` in [webapp/app_lib/data.py](webapp/app_lib/data.py)). For each session, *TR(t) = TR(t−1) × (P(t) + D(t)) / P(t−1)*, where P is the split-adjusted reference price and D the adjusted net dividend going ex that day. The net dividend is what the investor receives after the withholding tax (IRVM). Over 10 years this adds 5 to 8 % a year to the price return of the large payers, e.g. SONATEL: +71 % on price alone and +273 % with dividends since 2016-08-01.
 
 ### `bond_quotes` — PK (date, symbol)
 

@@ -144,3 +144,25 @@ From 2026-11-24, everything is documented in the project, including plans, propo
   * light-blue accents and links (`#8CC8F2`, `#A9D8FF`) so the language switch and the 📄 BOC link stay readable.
 * The rest of the app keeps its theme. The charts keep the validated palette.
 * **Waiting for the user:** a check of the colours in the browser, then step 3 (total return).
+
+## 2026-11-24: step 3 built, total return
+
+* **Request:** step 3 (user: "step 3").
+* **Finding:**
+  * The bulletin flags the ex-dividend session with "(d)". The new dividend appears that day, and BRVM lowers the reference price by about the dividend. SONATEL on 2025-05-19: −1 655, exactly the dividend.
+  * Complications:
+    * amounts restated after splits;
+    * 2016–2017 bulletins filling the dividend column only after the payment;
+    * misprinted payment dates.
+* **Built:**
+  * **The table `dividend_events`** ([brvm_extract/dividends.py](brvm_extract/dividends.py)), refreshed after each extraction. It holds 325 events: 278 from the flag, 39 from a price drop matching the dividend, 7 from the first appearance, 1 from the largest drop. Three real dividends could not be placed.
+  * **`total_return_index`** in the app: the net dividend is reinvested on its ex-dividend session.
+  * **A Performance switch in the sidebar:** *Dividends reinvested* (default, as decided) / *Price only*, kept in the URL (`?basis=`).
+    * Stock page: YTD and 1-year return follow the switch. The chart shows the price with dividends reinvested next to the adjusted price.
+    * Comparison: the rebased chart, return, volatility, drawdown and correlation follow the switch.
+    * BRVM indices, daily changes and movers stay on price, as BRVM publishes them.
+* **Checks:**
+  * 40 tests pass. The new ones cover the formula on a synthetic case, SONATEL's 2025 ex-date and amount, a flat total return on the ex-day, the 10-year gap, both bases on the pages, and the detection rules (flag, restatement, misprint, price drop).
+  * Orders of magnitude: dividends add 4 to 8 % a year on top of the price return, consistent with BRVM yields.
+* **Docs:** [EXTRACTION.md → Dividends and total return](EXTRACTION.md#dividends-and-total-return-dividend_events--pk-symbol-div_date), [WEBAPP.md → Pages](WEBAPP.md#pages).
+* **Waiting for the user:** the review of step 3, then step 4 (stronger stock page).

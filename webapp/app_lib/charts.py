@@ -63,16 +63,21 @@ def lines(series: dict[str, pd.Series], title: str | None = None, height: int = 
     return fig
 
 
-def price_volume(price: pd.Series, volume: pd.Series, price_name: str, volume_name: str,
+def price_volume(prices: dict[str, pd.Series] | pd.Series, volume: pd.Series, price_name: str, volume_name: str,
                  height: int = 520) -> go.Figure:
-    """Price on top, volume below: two panels sharing the time axis (never a dual axis)."""
+    """Price line(s) on top, volume below: two panels sharing the time axis (never a dual axis).
+    `prices` is one series, or {name: series} in the same unit (e.g. price with dividends reinvested, price)."""
+    if isinstance(prices, pd.Series):
+        prices = {price_name: prices}
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_heights=[0.74, 0.26], vertical_spacing=0.04)
-    p = price.dropna()
-    fig.add_trace(go.Scatter(x=p.index, y=p.values, name=price_name, mode="lines",
-                             line=dict(color=SERIES[0], width=2), hovertemplate="%{y:,.0f}<extra></extra>"), 1, 1)
+    for i, (name, s) in enumerate(prices.items()):
+        p = s.dropna()
+        fig.add_trace(go.Scatter(x=p.index, y=p.values, name=name, mode="lines",
+                                 line=dict(color=SERIES[i % len(SERIES)], width=2 if i == 0 else 1.5),
+                                 hovertemplate=f"%{{y:,.0f}}<extra>{name}</extra>"), 1, 1)
     fig.add_trace(go.Bar(x=volume.index, y=volume.values, name=volume_name, marker_color=SERIES[0],
-                         opacity=0.55, hovertemplate="%{y:,.0f}<extra></extra>"), 2, 1)
-    _layout(fig, None, height, legend=False)
+                         opacity=0.55, hovertemplate="%{y:,.0f}<extra></extra>", showlegend=False), 2, 1)
+    _layout(fig, None, height, legend=len(prices) > 1)
     fig.update_xaxes(rangeselector=range_buttons(), row=1, col=1)
     fig.update_yaxes(title=price_name, row=1, col=1)
     fig.update_yaxes(title=volume_name, row=2, col=1)

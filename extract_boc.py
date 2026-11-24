@@ -105,7 +105,8 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _refresh_derived(con, boc_dir: Path = Path("boc")) -> None:
-    """Tables computed across bulletins: bulletin links, securities master, corporate actions, adjusted prices."""
+    """Tables computed across bulletins: bulletin links, securities master, corporate actions, adjusted prices,
+    dividend events."""
     from brvm_extract.adjustments import refresh_adjustments
     n = db.refresh_bulletins(con, boc_dir / "manifest.csv")
     print(f"Bulletin links refreshed: {n} published bulletins")
@@ -113,6 +114,9 @@ def _refresh_derived(con, boc_dir: Path = Path("boc")) -> None:
     r = refresh_adjustments(con)
     print(f"Derived tables refreshed: {r['actions']} corporate actions on {r['symbols']} stocks, "
           f"{r['anomalies']} misprinted sessions flagged")
+    from brvm_extract.dividends import refresh_dividends
+    d = refresh_dividends(con)
+    print(f"Dividend events refreshed: {d['events']} ex-dividend sessions placed")
 
 
 if __name__ == "__main__":

@@ -34,6 +34,21 @@ LABELS: dict[str, tuple[str, str]] = {
     "page_bonds": ("Obligations", "Bonds"),
     "page_funds": ("OPCVM", "Mutual funds"),
     "page_bulletins": ("Bulletins officiels (BOC)", "Official bulletins (BOC)"),
+    # performance basis (total return)
+    "basis": ("Performance", "Performance"),
+    "basis_tr": ("Dividendes réinvestis", "Dividends reinvested"),
+    "basis_price": ("Cours seul", "Price only"),
+    "basis_help": ("Dividendes réinvestis : le dividende net est réinvesti le jour de son détachement (rendement "
+                   "total). Cours seul : variation du cours ajusté des fractionnements, sans les dividendes.",
+                   "Dividends reinvested: the net dividend is reinvested on its ex-dividend day (total return). "
+                   "Price only: change of the split-adjusted price, without dividends."),
+    "basis_note_tr": ("Performance dividendes nets réinvestis le jour du détachement. Choix dans le menu de gauche.",
+                      "Performance with net dividends reinvested on the ex-dividend day. Change it in the left menu."),
+    "basis_note_price": ("Performance du cours seul, hors dividendes. Choix dans le menu de gauche.",
+                         "Price-only performance, without dividends. Change it in the left menu."),
+    "tr_price": ("Cours avec dividendes réinvestis", "Price with dividends reinvested"),
+    "ytd_tr": ("Perf. annuelle (div. réinvestis)", "YTD (dividends reinvested)"),
+    "return_1y_tr": ("Perf. 1 an (div. réinvestis)", "1-year (dividends reinvested)"),
     # daily briefing (app_lib/briefing.py)
     "briefing_title": ("Résumé de la séance", "Session summary"),
     "sum_up": ("Le BRVM Composite a progressé de {pct} à {value} points", "The BRVM Composite rose {pct} to {value} points"),
