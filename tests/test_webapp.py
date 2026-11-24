@@ -127,6 +127,37 @@ def test_stock_page_data():
     assert sector == "FIN" and n == 17 and val["per"].max() <= data.PER_MAX
 
 
+def test_performance_table():
+    from app_lib import data
+    v = data.as_of()
+    pr = data.performance_table(v, "price").set_index("symbol")
+    brvm = data.equities_on(v, v).set_index("symbol")["ytd_pct"]
+    both = pr["YTD"].round(2).to_frame().join(brvm).dropna()
+    assert len(both) >= 45 and (both["YTD"] - both["ytd_pct"]).abs().max() < 0.01   # = BRVM's printed YTD
+    tr = data.performance_table(v, "tr").set_index("symbol")
+    assert tr.loc["SNTS", "5Y"] > pr.loc["SNTS", "5Y"] > 0
+    assert abs((1 + tr.loc["SNTS", "5Y"] / 100) ** (1 / 5) - 1 - tr.loc["SNTS", "5Y_ann"] / 100) < 1e-9
+
+
+def test_simulator():
+    import pandas as pd
+    import sys
+    sys.path.insert(0, str(ROOT / "webapp"))
+    from views.compare import simulate
+    idx = pd.to_datetime(["2024-01-02", "2024-05-02", "2024-05-03", "2025-01-02"])
+    h = pd.DataFrame({"adj_ref_price": [100.0, 110.0, 105.0, 120.0]}, index=idx)
+    from app_lib.data import total_return_index
+    divs = pd.DataFrame({"ex_date": pd.to_datetime(["2024-05-03"]), "adj_div_amount": [5.0]})
+    h["tr_price"] = total_return_index(h["adj_ref_price"], divs.set_index("ex_date")["adj_div_amount"])
+    composite = pd.Series([200.0, 210.0, 205.0, 220.0], index=idx)
+    sim = simulate(h, divs, composite, 1000.0, pd.Timestamp("2024-01-01"))
+    end = sim.iloc[-1]
+    assert end["price"] == 1200.0                       # 10 shares x 120
+    assert end["cash"] == 1250.0                        # + 10 shares x 5 FCFA dividend
+    assert round(end["reinvested"], 6) == round(1000 * (110 / 100) * (110 / 110) * (120 / 105), 6)
+    assert end["index"] == 1100.0 and end["dividends"] == 50.0
+
+
 @pytest.mark.parametrize("page", ["stock", "compare"])
 def test_pages_render_price_basis(page):
     from streamlit.testing.v1 import AppTest

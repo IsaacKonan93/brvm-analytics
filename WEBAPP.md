@@ -13,10 +13,11 @@ A public website for analysing the BRVM data in `brvm.db`. It is built with [Str
 3. [How it works](#how-it-works)
 4. [Daily briefing rules](#daily-briefing-rules)
 5. [Stock page rules](#stock-page-rules)
-6. [Put it online (Streamlit Community Cloud)](#put-it-online-streamlit-community-cloud)
-7. [Daily data updates online](#daily-data-updates-online)
-8. [Changing the app](#changing-the-app)
-9. [Tests](#tests)
+6. [Compare & screen rules](#compare--screen-rules)
+7. [Put it online (Streamlit Community Cloud)](#put-it-online-streamlit-community-cloud)
+8. [Daily data updates online](#daily-data-updates-online)
+9. [Changing the app](#changing-the-app)
+10. [Tests](#tests)
 
 ## Run it locally
 
@@ -48,7 +49,7 @@ Wherever a session date is shown, a **📄 BOC** link opens that day's official 
 |---|---|
 | **Market overview** | Session picker (default: last session). **Daily briefing:** a written summary of the session in French or English; *Highlights* (52-week highs and lows, moves close to the ±7.5 % limit, unusual trading, splits, new notices); *Upcoming* (general meetings, dividend payments, splits and first listings announced in the bulletins), each with the 📄 bulletin announcing it. Rules: [Daily briefing rules](#daily-briefing-rules). Headline indices (BRVM Composite, BRVM 30, BRVM Prestige; BRVM 10 before 2023) with day and year-to-date change. Equity and bond market cap, value traded, rising / falling / unchanged. Composite history with range buttons (1M → All). Top gainers and losers. Most traded stocks. Sector indices since 1 January. Market cap of equities vs bonds over time. Value traded per month with its 12-month average. |
 | **Stock explorer** | Stock picker; `?symbol=SNTS` in the URL opens that stock directly. Caption: country, sector, compartment, last session with its 📄 BOC. KPIs: last adjusted price and day change, YTD and 1-year return (dividends reinvested by default), P/E, net yield, last dividend. Price chart with a volume panel below; with dividends reinvested it shows the price with dividends reinvested next to the split-adjusted price. Four tabs: **Dividends**: a dividend announced and not yet paid; trailing 12-month yield, 5-year growth of the yearly dividend, years with a dividend; dividend per payment year; every dividend with its ex-date (📄 BOC), payment date, amount as printed, adjusted amount and yield at the ex-date. **Liquidity**, over 3 months, 1 year or 3 years: average value and volume per session, share of sessions with trades, liquidity rank among the listed stocks; value traded per month; order book at the close and the bid-ask spread over the last 90 sessions. **Valuation**: P/E and net yield since 2016 against the median of the stock's sector and of the market. **Events**: splits, notices, shareholder meetings. Rules: [Stock page rules](#stock-page-rules). |
-| **Compare & screen** | *Compare:* up to 8 stocks over YTD / 1Y / 3Y / 5Y / All, rebased to 100, with dividends reinvested by default. Return, annualised volatility and maximum drawdown. Correlation heatmap of daily returns. *Screener:* every listed stock on the last session, with filters on sector, compartment, country, P/E range, minimum yield and minimum average daily value traded over 3 months. Sortable, CSV export. |
+| **Compare & screen** | Four tabs, all following the Performance switch. *Compare:* up to 8 stocks over YTD / 1Y / 3Y / 5Y / All, rebased to 100; return, annualised volatility and maximum drawdown; correlation heatmap of daily returns. *Performance:* every listed stock over 1 week, 1 month, YTD, 1, 3 and 5 years (plus 3 and 5 years per year), with filters on sector and country and a bar chart ranking the stocks over the chosen horizon; sortable, CSV export. *Screener:* every listed stock on the last session, with filters on sector, country, compartment, P/E range, minimum yield and minimum average daily value traded over 3 months, and its 1-year return; sortable, CSV export. *Simulator:* an amount invested in one stock on a chosen date, and its value today with dividends reinvested, with dividends taken in cash, on price only, and in the BRVM Composite; chart and table with gain and gain per year. Rules: [Compare & screen rules](#compare--screen-rules). |
 | **Bonds** | Every listed bond on the last session, with filters on issuer, category and maturity: coupon, maturity, nominal, price, accrued coupon, next coupon, amortisation. Coupon vs maturity chart, colored by issuer when 3 or fewer issuers are selected. History of one bond (price, accrued coupon). Value traded per year, equities vs bonds. |
 | **Official bulletins (BOC)** | Pick a date to open that session's BOC on brvm.org. On a holiday or weekend, the page says there was no bulletin and offers the previous one. Below that, the list of bulletins of a year, filterable by month: date, weekday, status, link. CSV export. |
 | **Mutual funds** | Ranking of the funds with a recent NAV: latest NAV and its date, 1-year and 3-year performance (based on the NAV dates, since NAVs are often published late). Filters on category and manager. NAV chart of up to 4 funds, rebased to 100, with misprinted values filtered out. |
@@ -121,6 +122,14 @@ The functions are in [webapp/app_lib/data.py](webapp/app_lib/data.py): `dividend
 | Liquidity | Over the chosen period. Every session counts, including those without trades (value 0). Rank by average value traded among the stocks quoted on the last session. |
 | Spread | (best ask − best bid) / mid price at the close, over the last 90 sessions with both a bid and an ask. The slim online database keeps 90 sessions of order book, so this works online too. |
 | Valuation | P/E and net yield as printed by BRVM. P/E below 0 or above 100 and yields above 30 % are left out. The sector is the stock's **current** sector over the whole history: BRVM's sector codes only exist since 2023 and changed in 2025. The medians include the stock itself. |
+
+## Compare & screen rules
+
+| Item | Rule |
+|---|---|
+| Performance horizons | `performance_table` in [webapp/app_lib/data.py](webapp/app_lib/data.py). Return from the last session on or before the start of the horizon (1 week, 1 month, 31 December of last year, 1, 3 or 5 years earlier) to the last session. A stock listed for less time has no value for that horizon. On *Price only*, the YTD column equals the yearly change printed by BRVM, checked for every stock. |
+| Per year | 3 and 5 years: (1 + return) ^ (1 / years) − 1. |
+| Simulator | `simulate` in [webapp/views/compare.py](webapp/views/compare.py). Purchase at the reference price of the first session from the chosen date; fractional shares; no brokerage fees. Four scenarios: *dividends reinvested* (total return), *dividends taken in cash* (shares × price + net dividends received so far), *price only*, and the same amount in the BRVM Composite, which is a price index without dividends. |
 
 ## Put it online (Streamlit Community Cloud)
 

@@ -34,6 +34,40 @@ LABELS: dict[str, tuple[str, str]] = {
     "page_bonds": ("Obligations", "Bonds"),
     "page_funds": ("OPCVM", "Mutual funds"),
     "page_bulletins": ("Bulletins officiels (BOC)", "Official bulletins (BOC)"),
+    # compare & screen: performance table and simulator (step 5)
+    "tab_performance": ("Performances", "Performance"), "tab_simulator": ("Simulateur", "Simulator"),
+    "1W": ("1S", "1W"),
+    "perf_1W": ("1 semaine %", "1 week %"), "perf_1M": ("1 mois %", "1 month %"), "perf_YTD": ("Depuis le 1er janv. %", "YTD %"),
+    "perf_1Y": ("1 an %", "1 year %"), "perf_3Y": ("3 ans %", "3 years %"), "perf_5Y": ("5 ans %", "5 years %"),
+    "perf_3Y_ann": ("3 ans, par an %", "3 years, per year %"), "perf_5Y_ann": ("5 ans, par an %", "5 years, per year %"),
+    "perf_chart_horizon": ("Horizon du graphique", "Chart horizon"),
+    "perf_chart": ("Performance par valeur : {h}", "Performance by stock: {h}"),
+    "perf_note": ("Mesurée depuis la dernière séance à la date de début de l'horizon (1S = une semaine). Une valeur "
+                  "cotée depuis moins longtemps n'a pas de chiffre pour cet horizon. En « cours seul », la colonne « depuis "
+                  "le 1er janvier » est égale à la variation annuelle publiée par la BRVM.",
+                  "Measured from the last session on the start date of the horizon (1W = one week). A stock listed "
+                  "for less time has no figure for that horizon. On \"price only\", the YTD column equals the yearly "
+                  "change published by BRVM."),
+    "sim_amount": ("Montant investi (FCFA)", "Amount invested (FCFA)"),
+    "sim_start": ("Date d'achat", "Purchase date"),
+    "sim_sentence": ("**{amount} FCFA** investis dans **{name}** le {start} vaudraient aujourd'hui **{value} FCFA** "
+                     "avec les dividendes réinvestis, soit **{gain}** ({ann} par an).",
+                     "**{amount} FCFA** invested in **{name}** on {start} would be worth **{value} FCFA** today with "
+                     "dividends reinvested: **{gain}** ({ann} per year)."),
+    "sim_reinvested": ("Dividendes réinvestis", "Dividends reinvested"),
+    "sim_cash": ("Dividendes encaissés", "Dividends taken in cash"),
+    "sim_price": ("Cours seul", "Price only"),
+    "sim_index": ("BRVM Composite (même montant)", "BRVM Composite (same amount)"),
+    "sim_chart": ("Valeur du placement (FCFA)", "Value of the investment (FCFA)"),
+    "sim_scenario": ("Scénario", "Scenario"), "sim_value": ("Valeur finale (FCFA)", "Final value (FCFA)"),
+    "sim_gain": ("Gain %", "Gain %"), "sim_ann": ("Par an %", "Per year %"),
+    "sim_note": ("Achat au cours de référence de la première séance à partir de la date choisie, du {start} au {end}. "
+                 "Parts fractionnaires, sans frais de courtage. Dividendes nets (après retenue à la source) ; "
+                 "dividendes encaissés sur la période : {dividends} FCFA. Le BRVM Composite est un indice de prix, "
+                 "sans les dividendes.",
+                 "Bought at the reference price of the first session from the chosen date, from {start} to {end}. "
+                 "Fractional shares, no brokerage fees. Net dividends (after withholding tax); dividends received "
+                 "over the period: {dividends} FCFA. The BRVM Composite is a price index, without dividends."),
     # stock page tabs (step 4)
     "tab_dividends": ("Dividendes", "Dividends"), "tab_liquidity": ("Liquidité", "Liquidity"),
     "tab_valuation": ("Valorisation", "Valuation"), "tab_events": ("Événements", "Events"),

@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS securities (
     symbol TEXT PRIMARY KEY,
     asset_type TEXT,                 -- equity | right | bond
     name TEXT,
-    country TEXT,                    -- CI SN BF BN ML NG TG (from the name suffix, equities)
+    country TEXT,                    -- CI SN BF BJ ML NE TG GW (equities: name suffix, else symbol suffix)
     sector TEXT,                     -- latest sector label / code
     compartment TEXT,                -- latest compartment
     issuer TEXT, coupon_rate REAL, issue_year INTEGER, maturity_year INTEGER,   -- bonds
@@ -227,3 +227,15 @@ def refresh_securities(con: sqlite3.Connection) -> None:
               WHEN name LIKE '% TG' OR name LIKE '%TOGO%' THEN 'TG'
               WHEN name LIKE '% GB' OR name LIKE '%BISSAU%' THEN 'GW'
             END WHERE asset_type = 'equity'""")
+        # names without a country (e.g. 'CORIS BANK INTERNATIONAL', 'SUCRIVOIRE'): BRVM symbols end with the
+        # country (SNTS -> SN, CBIBF -> BF, SCRC -> CI). Agrees with the name rule for every stock that has both.
+        con.execute("""
+            UPDATE securities SET country = CASE
+              WHEN symbol LIKE '%BF' THEN 'BF'
+              WHEN substr(symbol, -1) = 'C' THEN 'CI'
+              WHEN substr(symbol, -1) = 'S' THEN 'SN'
+              WHEN substr(symbol, -1) = 'B' THEN 'BJ'
+              WHEN substr(symbol, -1) = 'M' THEN 'ML'
+              WHEN substr(symbol, -1) = 'N' THEN 'NE'
+              WHEN substr(symbol, -1) = 'T' THEN 'TG'
+            END WHERE asset_type = 'equity' AND country IS NULL""")

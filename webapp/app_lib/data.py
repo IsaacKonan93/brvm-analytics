@@ -481,6 +481,37 @@ def price_matrix(v: str, symbols: tuple[str, ...], start: str | None, basis: str
     return full
 
 
+HORIZONS = ("1W", "1M", "YTD", "1Y", "3Y", "5Y")  # performance table (WEBAPP_ROADMAP.md, step 5)
+
+
+def horizon_start(end: pd.Timestamp, h: str) -> pd.Timestamp:
+    """Cut-off date of a horizon: the return is measured from the last session on or before it."""
+    if h == "YTD":
+        return pd.Timestamp(end.year, 1, 1) - pd.Timedelta(days=1)
+    offsets = {"1W": pd.DateOffset(weeks=1), "1M": pd.DateOffset(months=1), "1Y": pd.DateOffset(years=1),
+               "3Y": pd.DateOffset(years=3), "5Y": pd.DateOffset(years=5)}
+    return end - offsets[h]
+
+
+@st.cache_data(show_spinner=False)
+def performance_table(v: str, basis: str) -> pd.DataFrame:
+    """Return (%) of every stock quoted on the last session over each horizon of HORIZONS, on the chosen
+    basis ('tr' dividends reinvested, 'price' price only), plus 3Y and 5Y annualised. A stock listed after
+    the start of a horizon has no value for it."""
+    snap = equities_on(v, v)
+    m = price_matrix(v, tuple(snap["symbol"]), None, basis).ffill()
+    end = m.index[-1]
+    last = m.iloc[-1]
+    out = pd.DataFrame(index=m.columns)
+    for h in HORIZONS:
+        past = m[m.index <= horizon_start(end, h)]
+        out[h] = (last / past.iloc[-1] - 1) * 100 if len(past) else float("nan")
+    for h, years in (("3Y", 3), ("5Y", 5)):
+        out[f"{h}_ann"] = ((1 + out[h] / 100) ** (1 / years) - 1) * 100
+    info = snap.set_index("symbol")[["name", "sector_code", "country", "ref_price"]]
+    return info.join(out).reset_index()
+
+
 @st.cache_data(show_spinner=False)
 def screener(v: str) -> pd.DataFrame:
     """Latest session of each listed stock + 3-month average value traded and return."""

@@ -187,3 +187,28 @@ From 2026-11-24, everything is documented in the project, including plans, propo
   * The page renders for five stocks: two large payers, one without a dividend since 2022, one without any dividend, one delisted. It renders on the full and the slim database, in both languages.
 * **Rules documented** in [WEBAPP.md → Stock page rules](WEBAPP.md#stock-page-rules).
 * **Waiting for the user:** the review of the stock page (steps 3 and 4), then step 5 (performance table and investment simulator).
+
+## 2026-11-24: step 5 built, performance table and investment simulator
+
+* **Request:** step 5 (user: "step 5").
+* **Built:** the Compare & screen page now has four tabs:
+  * **Compare:** as before.
+  * **Performance:** every listed stock over 1W, 1M, YTD, 1Y, 3Y and 5Y, plus 3Y and 5Y per year; a ranking chart over the chosen horizon; filters on sector and country; CSV export.
+  * **Screener:** the existing tab plus the 1-year return, which follows the switch.
+  * **Simulator:** an amount in one stock from a chosen date, with four scenarios:
+    * dividends reinvested;
+    * dividends taken in cash;
+    * price only;
+    * the same amount in the BRVM Composite.
+  * Everything follows the Performance switch (dividends reinvested by default).
+* **Checks:**
+  * On *Price only*, the YTD column equals BRVM's printed yearly change for every stock. This confirms the split adjustments and the method.
+  * Example: 1,000,000 FCFA in SONATEL on 2021-11-23 is worth today:
+    * 4.19 M FCFA with dividends reinvested (+319.5 %, the same as the table's 5-year figure);
+    * 3.40 M with dividends in cash;
+    * 2.83 M on price only;
+    * 2.47 M in the Composite.
+  * 43 tests pass. The new ones cover the performance table against BRVM and the simulator on a synthetic case.
+* **Fix found on the way:** 6 stocks had no country because their names carry no country suffix (CORIS BANK INTERNATIONAL, SUCRIVOIRE, SIB, ERIUM, SIEM, TRITURAF), so the country filters missed them. The country is now taken from the BRVM symbol suffix when the name has none (CBIBF → BF, SCRC → CI). This rule agrees with the name rule for all 45 stocks that have both.
+* **Rules documented** in [WEBAPP.md → Compare & screen rules](WEBAPP.md#compare--screen-rules).
+* **Waiting for the user:** the review of step 5, then step 6 (market structure).

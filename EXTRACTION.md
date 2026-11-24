@@ -319,7 +319,7 @@ Some 2025 bulletins embed a font without a usable character map, so the text com
   * `level`: `group` (e.g. COMPARTIMENT PRINCIPAL), `category` (e.g. TOTAL - OBLIGATIONS CLASSIQUES) or `grand` (TOTAL - Marché des actions/obligations);
   * `volume`, `value`.
 * `securities`: rebuilt after each run from the latest quote of each symbol.
-  * `asset_type`, `name`, `country` (equities, from the name suffix: CI, SN, BF, BJ, ML, NE, TG), `sector`, `compartment`;
+  * `asset_type`, `name`, `country` (equities: CI, SN, BF, BJ, ML, NE, TG, from the name suffix such as "SONATEL SN"; when the name has none, e.g. "CORIS BANK INTERNATIONAL", from the symbol suffix: CBIBF → BF, SCRC → CI. Both rules agree on every stock that has both), `sector`, `compartment`;
   * bond terms; `first_date`, `last_date`.
 
 ## Quality control

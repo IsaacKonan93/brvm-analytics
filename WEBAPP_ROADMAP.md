@@ -40,7 +40,7 @@ For each page, the user reviews it in the browser and says what to keep, change,
 |---|---|
 | Market overview | **Accepted as is** (2026-11-23). It is now the daily briefing: the written summary, Highlights and Upcoming were added on 2026-11-24 (step 2), waiting for the user's review. |
 | Stock explorer | Rebuilt on 2026-11-24 (steps 3 and 4): total return, then the Dividends, Liquidity, Valuation and Events tabs. **Waiting for the user's review.** |
-| Compare & screen | Not reviewed; the performance table and simulator are added to it |
+| Compare & screen | Rebuilt on 2026-11-24 (step 5): tabs Compare, Performance, Screener, Simulator. **Waiting for the user's review.** |
 | Bonds | Not reviewed |
 | Mutual funds | Not reviewed |
 | Official bulletins (BOC) | **New**, built on 2026-11-24 (step 1); waiting for the user's review |
@@ -52,6 +52,7 @@ For each page, the user reviews it in the browser and says what to keep, change,
 * **2026-11-24:** the navigation bar is now Indigo dye `#00416A` (user's request).
 * **2026-11-24:** step 3, total return, is built and tested. It is waiting for the user's review in the browser.
 * **2026-11-24:** step 4, the stronger stock page, is built and tested. It is waiting for the user's review in the browser.
+* **2026-11-24:** step 5, the performance table and investment simulator, is built and tested. It is waiting for the user's review in the browser.
 * **Deployment online is on hold** until the user says the rebuild is finished. Until then, nothing is pushed to GitHub or published. The deployment steps stay in [WEBAPP.md → Put it online](WEBAPP.md#put-it-online-streamlit-community-cloud).
 
 ## Decisions
@@ -104,8 +105,8 @@ Technical notes, checked on 2026-11-24:
 | **Dividends** | Per stock: the announced dividend, trailing 12-month yield, 5-year growth, years paid, dividend per year, and every dividend with its ex-date, payment date, amount and yield at the ex-date. Stock page, *Dividends* tab. | built, to review |
 | **Liquidity** | Average value and volume per session, share of sessions with trades, liquidity rank, value per month, spread over 90 sessions; over 3 months, 1 year or 3 years. Stock page, *Liquidity* tab. | built, to review |
 | **Valuation over time** | P/E and net yield since 2016 against the median of the stock's current sector and of the market. Stock page, *Valuation* tab. | built, to review |
-| **Performance table** | Every stock over 1W / 1M / YTD / 1Y / 3Y / 5Y, sortable. It sits with the existing screener and comparison tool. | decided |
-| **Investment simulator** | "1,000,000 FCFA invested in stock X on date Y is worth … today", with or without dividends. | decided |
+| **Performance table** | Every stock over 1W / 1M / YTD / 1Y / 3Y / 5Y, plus 3Y and 5Y per year, with a ranking chart; filters on sector and country. The screener gets the 1-year return. *Compare & screen*, *Performance* tab. | built, to review |
+| **Investment simulator** | An amount in one stock from a chosen date. Its value today with dividends reinvested, taken in cash, on price only, and in the BRVM Composite. *Compare & screen*, *Simulator* tab. | built, to review |
 | **Market structure** | Capitalisation by country and sector. Share of the 5 largest companies (SONATEL alone weighs a lot). Treemap of the market coloured by the day's change. | decided |
 | **Bonds** | Upcoming coupon and redemption dates; amounts outstanding by issuer. | proposed (after v1) |
 | **Funds** | The NAV ranking. | done (v1) |
